@@ -17,21 +17,31 @@ const timeLeft = () => RUN_MS - (Date.now() - T0);
 const rows = new Map();      // mint -> fila compacta
 const pairsOf = new Map();   // mint -> Map(pairAddress -> par) (solo durante esta ejecución)
 let termIdx = 0, sweepIdx = 0;
-let prevLoaded = false;
-if (PREV_FILE){
-  try { const j = JSON.parse(await fs.readFile(PREV_FILE, 'utf8')); for (const o of j.rows || []) if (o.mint) rows.set(o.mint, o); termIdx = j.termIdx || 0; sweepIdx = j.sweepIdx || 0; prevLoaded = true; console.log('Lista de la vuelta anterior:', rows.size, 'tokens'); } catch {}
-}
-if (PREV_URL && !prevLoaded){
-  // si la lista anterior existe pero no se puede leer, se para aquí: así nunca se publica una lista más pequeña
+const archive = new Map();   // tokens sin actividad en 24 h: nunca se borran, se guardan aparte (archive.json)
+const pending = new Map();   // tokens recién creados (PumpPortal) que DexScreener aún no lista: mint -> primera vez visto
+// lee la lista de la vuelta anterior (archivo local) o la publicada (URL). Si existe pero no se puede leer, se para.
+async function loadPrev(file, url){
+  if (file){ try { return JSON.parse(await fs.readFile(file, 'utf8')); } catch {} }
+  if (!url) return null;
   let r;
   for (let i = 0; i < 4; i++){
-    try { r = await fetch(PREV_URL + '?t=' + Date.now(), { headers:{ 'cache-control':'no-cache' } }); if (r.ok || r.status === 404) break; } catch {}
+    try { r = await fetch(url + '?t=' + Date.now(), { headers:{ 'cache-control':'no-cache' } }); if (r.ok || r.status === 404) break; } catch {}
     await sleep(5000);
   }
-  if (r?.status === 404) console.log('Primera ejecución: se empieza de cero');
-  else if (!r?.ok) { console.error('No se pudo leer la lista anterior; no se publica nada en esta ejecución.'); process.exit(1); }
-  else { const j = await r.json(); for (const o of j.rows || []) if (o.mint) rows.set(o.mint, o); termIdx = j.termIdx || 0; sweepIdx = j.sweepIdx || 0; console.log('Lista anterior:', rows.size, 'tokens'); }
+  if (r?.status === 404) return null;
+  if (!r?.ok) { console.error('No se pudo leer ' + url + '; no se publica nada en esta ejecución.'); process.exit(1); }
+  return r.json();
 }
+const ARCH_FILE = PREV_FILE ? PREV_FILE.replace(/tokens\.json$/, 'archive.json') : '';
+const ARCH_URL = PREV_URL ? PREV_URL.replace(/tokens\.json$/, 'archive.json') : '';
+const prevActive = await loadPrev(PREV_FILE, PREV_URL);
+const prevArchive = await loadPrev(ARCH_FILE, ARCH_URL);
+for (const o of prevActive?.rows || []) if (o.mint) rows.set(o.mint, o);
+for (const o of prevArchive?.rows || []) if (o.mint && !rows.has(o.mint)) archive.set(o.mint, o);
+for (const [m, t] of prevActive?.pending || []) if (!rows.has(m)) pending.set(m, t);
+termIdx = prevActive?.termIdx || 0; sweepIdx = prevActive?.sweepIdx || 0;
+let archIdx = prevActive?.archIdx || 0;
+console.log(`Lista anterior: ${rows.size} activos, ${archive.size} en el histórico, ${pending.size} pendientes`);
 
 /* ---------- ritmo de llamadas ---------- */
 // pares, búsquedas y tokens: 300/min en DexScreener → se usan ~240/min
@@ -113,11 +123,26 @@ function derive(mint){
   rows.set(mint, row);
 }
 
+/* ---------- PumpPortal: avisa de cada token nuevo de Pump.fun y de cada migración ---------- */
+let pumpSeen = 0;
+function startPumpPortal(){
+  if (typeof WebSocket === 'undefined') { console.log('WebSocket no disponible (usa Node 22)'); return null; }
+  try {
+    const ws = new WebSocket('wss://pumpportal.fun/api/data');
+    ws.onopen = () => { ws.send(JSON.stringify({ method:'subscribeNewToken' })); ws.send(JSON.stringify({ method:'subscribeMigration' })); };
+    ws.onmessage = ev => { try { const m = JSON.parse(ev.data); if (m?.mint && typeof m.mint === 'string') { pumpSeen++; if (!rows.has(m.mint)) { if (!pending.has(m.mint)) pending.set(m.mint, Date.now()); if (archive.has(m.mint)) enqueue(m.mint); } } } catch {} };
+    ws.onerror = () => {};
+    return ws;
+  } catch { return null; }
+}
+
 /* ---------- recorrido ---------- */
 const queue = [], queued = new Set();
+const pendingTry = new Map();
 const enqueue = m => { if (!queued.has(m)) { queued.add(m); queue.push(m); } };
 let calls = 0, newTokens = 0;
-const before = new Set(rows.keys());
+const pumpWs = startPumpPortal();
+const before = new Set([...rows.keys(), ...archive.keys()]);
 const startMints = new Set(rows.keys());
 
 // 1) listas: perfiles (DEX pagado), actualizados, boosts, takeovers, anuncios.
@@ -174,7 +199,13 @@ while (timeLeft() > 15000){
       const j = await ds('/latest/dex/search?q=' + encodeURIComponent(q)); ingest(j.pairs);
     } else {                                     // la otra: datos de 30 tokens (primero los nuevos, luego los más antiguos)
       let batch = queue.splice(0, 30); batch.forEach(m => queued.delete(m));
-      for (const m of pairsOf.keys()) { if (batch.length >= 30) break; if (!rows.has(m) && !batch.includes(m)) batch.push(m); }
+      // tokens de PumpPortal: se reintentan hasta que DexScreener los lista (cada 20 s al principio, luego más espaciado; máx. 1 h)
+      const now = Date.now();
+      for (const [m, t] of pending){ if (batch.length >= 30) break; const gap = Math.min(180000, 20000 * (1 + Math.floor((now - t) / 300000))); if (now - (pendingTry.get(m) || 0) > gap && !batch.includes(m)) { batch.push(m); pendingTry.set(m, now); } }
+      if (batch.length < 30 && flip % 12 === 1 && archive.size){   // de vez en cuando, un lote del histórico por si revive
+        const arch = [...archive.keys()];
+        while (batch.length < 30 && batch.length < arch.length){ const m = arch[archIdx++ % arch.length]; if (!batch.includes(m)) batch.push(m); }
+      }
       if (batch.length < 30){
         const all = [...rows.keys()];
         while (batch.length < 30 && all.length && batch.length < all.length){ const m = all[sweepIdx++ % all.length]; if (!batch.includes(m)) batch.push(m); }
@@ -183,11 +214,13 @@ while (timeLeft() > 15000){
     }
     calls++;
   } catch (e) { console.log(e.message); }
-  for (const m of pairsOf.keys()) { derive(m); if (!before.has(m)) { before.add(m); newTokens++; } }
+  for (const m of pairsOf.keys()) { if (archive.has(m)) { rows.set(m, { ...archive.get(m) }); archive.delete(m); } derive(m); pending.delete(m); if (!before.has(m)) { before.add(m); newTokens++; } }
   pairsOf.clear();
 }
 
 await Promise.all(listLoops);
+try { pumpWs?.close(); } catch {}
+console.log('PumpPortal: tokens/migraciones recibidos en esta vuelta:', pumpSeen);
 console.log('DEX pagados vistos en esta pasada:', paidSeen.size);
 
 // 5) holders y launchpad desde Jupiter para los tokens con más volumen (100 por llamada)
@@ -212,7 +245,16 @@ try {
 
 await fs.mkdir(OUT.split('/').slice(0, -1).join('/') || '.', { recursive: true });
 const at = Date.now();
-await fs.writeFile(OUT, JSON.stringify({ at, termIdx, sweepIdx, rows: [...rows.values()] }));
+// activos = como DexScreener: con volumen en las últimas 24 h, o creados en las últimas 24 h
+const isActive = r => (r.vol?.h24 || 0) > 0 || (r.created && at - r.created < 86400000);
+for (const r of [...rows.values()]) if (!isActive(r)) {
+  archive.set(r.mint, { mint:r.mint, symbol:r.symbol, name:r.name, img:r.img, pool:r.pool, dexId:r.dexId, lp:r.lp, created:r.created, mcap:r.mcap, holders:r.holders, x:r.x, site:r.site, paid:r.paid, seen:r.seen });
+  rows.delete(r.mint);
+}
+for (const [m, t] of pending) if (at - t > 3600000) pending.delete(m);
+await fs.writeFile(OUT, JSON.stringify({ at, termIdx, sweepIdx, archIdx, pending: [...pending], rows: [...rows.values()] }));
+await fs.writeFile(OUT.replace(/tokens\.json$/, 'archive.json'), JSON.stringify({ at, rows: [...archive.values()] }));
+console.log(`Activos: ${rows.size} · Histórico: ${archive.size} · Pendientes de PumpPortal: ${pending.size}`);
 // new.json: solo lo nuevo y los DEX pagados de esta vuelta (pocos KB). La web lo consulta cada 30 s.
 const fresh = [...rows.values()].filter(r => !startMints.has(r.mint) || paidSeen.has(r.mint));
 await fs.writeFile(OUT.replace(/tokens\.json$/, 'new.json'), JSON.stringify({ at, rows: fresh }));

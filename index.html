@@ -2421,6 +2421,31 @@ $('#newBtn').addEventListener('click', () => {
   page = 0; renderHead(); requestResort(); render(); saveFilters(); syncNewBtn();
 });
 syncNewBtn();
+
+/* ---------- PumpPortal en vivo: cada token nuevo de Pump.fun entra en cuanto DexScreener lo lista ---------- */
+const pumpPending = new Map();   // mint -> cuándo lo anunció PumpPortal
+let pumpWs = null, pumpRetry = 0;
+function connectPumpPortal(){
+  try {
+    pumpWs = new WebSocket('wss://pumpportal.fun/api/data');
+    pumpWs.onopen = () => { pumpRetry = 0; pumpWs.send(JSON.stringify({ method:'subscribeNewToken' })); pumpWs.send(JSON.stringify({ method:'subscribeMigration' })); };
+    pumpWs.onmessage = ev => {
+      try { const m = JSON.parse(ev.data); if (m?.mint && typeof m.mint === 'string' && !tokens.get(m.mint)?.pool){ pumpPending.set(m.mint, Date.now()); if (!dsQueued.has(m.mint)) { dsQueued.add(m.mint); dsQueue.unshift(m.mint); } } } catch {}
+    };
+    pumpWs.onclose = () => { setTimeout(connectPumpPortal, Math.min(30000, 2000 * ++pumpRetry)); };
+    pumpWs.onerror = () => { try { pumpWs.close(); } catch {} };
+  } catch {}
+}
+// los que DexScreener aún no listaba se reintentan: cada 15 s los primeros minutos, luego más espaciado, hasta 30 min
+setInterval(() => {
+  const now = Date.now();
+  for (const [m, t] of pumpPending){
+    if (tokens.get(m)?.pool || now - t > 30 * 60000) { pumpPending.delete(m); continue; }
+    const age = now - t;
+    if ((age < 5 * 60000 || Math.floor(age / 15000) % 4 === 0) && !dsQueued.has(m)) { dsQueued.add(m); dsQueue.push(m); }
+  }
+}, 15000);
+connectPumpPortal();
 applyLayout(); renderAlerts(); updateBar(); walletLoop();
 
 /* ---------- caché de tokens en el navegador (IndexedDB) ----------
