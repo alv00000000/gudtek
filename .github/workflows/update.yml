@@ -1,6 +1,7 @@
 # GUDTEK: recorre DexScreener, actualiza la lista compartida de tokens y publica la web en GitHub Pages.
 # Cada ejecución da 6 vueltas de ~70 s y publica al terminar cada vuelta (≈ cada 1,5 min).
-# Se lanza cada 5 min; si la anterior sigue en marcha, espera a que termine, así que el robot trabaja casi sin pausa.
+# Al terminar, cada ejecución lanza la siguiente, así que el robot trabaja sin pausa.
+# El cron de cada 5 min es solo un respaldo por si la cadena se corta (GitHub suele retrasarlo).
 name: Update GUDTEK
 
 on:
@@ -12,6 +13,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
   pages: write
   id-token: write
 
@@ -115,3 +117,10 @@ jobs:
       - id: deploy6
         uses: actions/deploy-pages@v4
         with: { artifact_name: pages-6 }
+
+      # ---------- encadenar: lanza la siguiente ejecución ----------
+      - name: Start next run
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run update.yml --repo ${{ github.repository }} --ref main
