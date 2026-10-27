@@ -1769,7 +1769,7 @@ let auto = true;
    · velas: se recargan al caducar (15 s en 1h, 45 s en 6h, 90 s en 24h) */
 let fastBusy = false, holdBusy = false;
 async function fastRefresh(){
-  if (!auto || document.hidden || fastBusy || loading || firstLoad) return;
+  if (!auto || document.hidden || fastBusy || (loading && !restoredFromCache) || firstLoad) return;
   const mints = order.slice(0, limit); if (!mints.length) return;
   fastBusy = true;
   try {
@@ -2490,6 +2490,8 @@ Promise.all([loadSharedList(), restoreTokenCache()]).then(([shared, local]) => {
     firstLoad = false; resort = true;
     setState('live', 'Live');
     render(); remountVisibleCharts(); spikeBaseline(); fillHolders();
+    loadNewList().then(n => { if (n) render(); });
+    setTimeout(fastRefresh, 50);   // precios de la página visible al momento
   }
   refreshAll();
 });

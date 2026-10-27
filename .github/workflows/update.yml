@@ -1,5 +1,5 @@
 # GUDTEK: recorre DexScreener, actualiza la lista compartida de tokens y publica la web en GitHub Pages.
-# Cada ejecución da 3 vueltas de ~2 min y publica al terminar cada vuelta (≈ cada 2,5 min).
+# Cada ejecución da 6 vueltas de ~70 s y publica al terminar cada vuelta (≈ cada 1,5 min).
 # Se lanza cada 5 min; si la anterior sigue en marcha, espera a que termine, así que el robot trabaja casi sin pausa.
 name: Update GUDTEK
 
@@ -22,12 +22,12 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     environment:
       name: github-pages
-      url: ${{ steps.deploy3.outputs.page_url }}
+      url: ${{ steps.deploy6.outputs.page_url }}
     env:
-      RUN_MS: '125000'
+      RUN_MS: '70000'
     steps:
       - uses: actions/checkout@v4
 
@@ -79,3 +79,39 @@ jobs:
       - id: deploy3
         uses: actions/deploy-pages@v4
         with: { artifact_name: pages-3 }
+
+      # ---------- vuelta 4 ----------
+      - name: Crawl 4
+        run: node crawler/crawl.mjs
+        env:
+          PREV_FILE: site/tokens.json
+          OUT: site/tokens.json
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site, name: pages-4 }
+      - id: deploy4
+        uses: actions/deploy-pages@v4
+        with: { artifact_name: pages-4 }
+
+      # ---------- vuelta 5 ----------
+      - name: Crawl 5
+        run: node crawler/crawl.mjs
+        env:
+          PREV_FILE: site/tokens.json
+          OUT: site/tokens.json
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site, name: pages-5 }
+      - id: deploy5
+        uses: actions/deploy-pages@v4
+        with: { artifact_name: pages-5 }
+
+      # ---------- vuelta 6 ----------
+      - name: Crawl 6
+        run: node crawler/crawl.mjs
+        env:
+          PREV_FILE: site/tokens.json
+          OUT: site/tokens.json
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site, name: pages-6 }
+      - id: deploy6
+        uses: actions/deploy-pages@v4
+        with: { artifact_name: pages-6 }

@@ -136,7 +136,7 @@ async function readList(path){
   } catch (e) { console.log(path, e.message); }
 }
 const listLoops = Object.entries(LISTS).map(async ([path, every]) => {
-  while (timeLeft() > 30000){ const t = Date.now(); await readList(path); await sleep(Math.max(0, every - (Date.now() - t))); }
+  while (timeLeft() > 16000){ const t = Date.now(); await readList(path); await sleep(Math.max(0, every - (Date.now() - t))); }
 });
 // 2) metas en tendencia, con sus pares
 try {
@@ -159,7 +159,7 @@ const TERMS = [...'abcdefghijklmnopqrstuvwxyz', ...('sol pump bonk meme ai agent
   'token labs dao fi swap bot app net world city land club team army gang nation tribe family').split(' ')].filter(Boolean);
 
 let flip = 0;
-while (timeLeft() > 25000){
+while (timeLeft() > 15000){
   flip++;
   try {
     if (flip % 3 === 0){                         // 1 de cada 3 llamadas: búsqueda
@@ -185,7 +185,7 @@ console.log('DEX pagados vistos en esta pasada:', paidSeen.size);
 
 // 5) holders y launchpad desde Jupiter para los tokens con más volumen (100 por llamada)
 try {
-  const top = [...rows.values()].sort((a,b) => (b.vol?.h24 || 0) - (a.vol?.h24 || 0)).slice(0, 2000).map(r => r.mint);
+  const top = [...rows.values()].sort((a,b) => (b.vol?.h24 || 0) - (a.vol?.h24 || 0)).slice(0, 1000).map(r => r.mint);
   for (let i = 0; i < top.length && timeLeft() > 2000; i += 100){
     const r = await fetch(JUP + '/tokens/v2/search?query=' + top.slice(i, i + 100).join(','));
     if (r.status === 429){ await sleep(3000); i -= 100; continue; }
