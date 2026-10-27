@@ -1,0 +1,57 @@
+# GUDTEK: recorre DexScreener, actualiza la lista compartida de tokens y publica la web en GitHub Pages.
+# Se ejecuta cada 10 minutos (GitHub puede retrasarlo unos minutos), al subir cambios y a mano desde la pestaña Actions.
+name: Update GUDTEK
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# nunca se ejecutan dos a la vez: cada ejecución parte de la lista que publicó la anterior
+concurrency:
+  group: gudtek-pages
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Prepare site
+        run: |
+          mkdir -p site
+          cp index.html site/index.html
+          touch site/.nojekyll
+
+      - name: Crawl DexScreener (4 min)
+        run: node crawler/crawl.mjs
+        env:
+          PREV_URL: ${{ steps.pages.outputs.base_url }}/tokens.json
+          OUT: site/tokens.json
+          RUN_MS: '240000'
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
