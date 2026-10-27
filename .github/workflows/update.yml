@@ -1,10 +1,11 @@
 # GUDTEK: recorre DexScreener, actualiza la lista compartida de tokens y publica la web en GitHub Pages.
-# Se ejecuta cada 10 minutos (GitHub puede retrasarlo unos minutos), al subir cambios y a mano desde la pestaña Actions.
+# Cada ejecución da 3 vueltas de ~2 min y publica al terminar cada vuelta (≈ cada 2,5 min).
+# Se lanza cada 5 min; si la anterior sigue en marcha, espera a que termine, así que el robot trabaja casi sin pausa.
 name: Update GUDTEK
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/5 * * * *'
   push:
     branches: [main]
   workflow_dispatch:
@@ -14,7 +15,6 @@ permissions:
   pages: write
   id-token: write
 
-# nunca se ejecutan dos a la vez: cada ejecución parte de la lista que publicó la anterior
 concurrency:
   group: gudtek-pages
   cancel-in-progress: false
@@ -22,10 +22,12 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deploy3.outputs.page_url }}
+    env:
+      RUN_MS: '125000'
     steps:
       - uses: actions/checkout@v4
 
@@ -42,16 +44,38 @@ jobs:
           cp index.html site/index.html
           touch site/.nojekyll
 
-      - name: Crawl DexScreener (4 min)
+      # ---------- vuelta 1 ----------
+      - name: Crawl 1
         run: node crawler/crawl.mjs
         env:
           PREV_URL: ${{ steps.pages.outputs.base_url }}/tokens.json
           OUT: site/tokens.json
-          RUN_MS: '240000'
-
       - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-
-      - id: deployment
+        with: { path: site, name: pages-1 }
+      - id: deploy1
         uses: actions/deploy-pages@v4
+        with: { artifact_name: pages-1 }
+
+      # ---------- vuelta 2 ----------
+      - name: Crawl 2
+        run: node crawler/crawl.mjs
+        env:
+          PREV_FILE: site/tokens.json
+          OUT: site/tokens.json
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site, name: pages-2 }
+      - id: deploy2
+        uses: actions/deploy-pages@v4
+        with: { artifact_name: pages-2 }
+
+      # ---------- vuelta 3 ----------
+      - name: Crawl 3
+        run: node crawler/crawl.mjs
+        env:
+          PREV_FILE: site/tokens.json
+          OUT: site/tokens.json
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site, name: pages-3 }
+      - id: deploy3
+        uses: actions/deploy-pages@v4
+        with: { artifact_name: pages-3 }

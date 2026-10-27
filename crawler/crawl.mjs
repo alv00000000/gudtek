@@ -7,6 +7,7 @@ const JUP = process.env.JUP_URL || 'https://lite-api.jup.ag';
 const OUT = process.env.OUT || 'site/tokens.json';
 const RUN_MS = +(process.env.RUN_MS || 240000);          // tiempo de recorrido por ejecución (4 min)
 const PREV_URL = process.env.PREV_URL || '';               // lista publicada en la ejecución anterior
+const PREV_FILE = process.env.PREV_FILE || '';             // o la que dejó la vuelta anterior dentro de la misma ejecución
 const T0 = Date.now();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
@@ -16,7 +17,11 @@ const timeLeft = () => RUN_MS - (Date.now() - T0);
 const rows = new Map();      // mint -> fila compacta
 const pairsOf = new Map();   // mint -> Map(pairAddress -> par) (solo durante esta ejecución)
 let termIdx = 0, sweepIdx = 0;
-if (PREV_URL){
+let prevLoaded = false;
+if (PREV_FILE){
+  try { const j = JSON.parse(await fs.readFile(PREV_FILE, 'utf8')); for (const o of j.rows || []) if (o.mint) rows.set(o.mint, o); termIdx = j.termIdx || 0; sweepIdx = j.sweepIdx || 0; prevLoaded = true; console.log('Lista de la vuelta anterior:', rows.size, 'tokens'); } catch {}
+}
+if (PREV_URL && !prevLoaded){
   // si la lista anterior existe pero no se puede leer, se para aquí: así nunca se publica una lista más pequeña
   let r;
   for (let i = 0; i < 4; i++){
@@ -113,6 +118,7 @@ const queue = [], queued = new Set();
 const enqueue = m => { if (!queued.has(m)) { queued.add(m); queue.push(m); } };
 let calls = 0, newTokens = 0;
 const before = new Set(rows.keys());
+const startMints = new Set(rows.keys());
 
 // 1) listas: perfiles (DEX pagado), actualizados, boosts, takeovers, anuncios.
 //    DexScreener solo devuelve los 30 últimos de cada lista, así que se consultan sin parar durante toda la pasada
@@ -198,5 +204,9 @@ try {
 } catch (e) { console.log('Jupiter:', e.message); }
 
 await fs.mkdir(OUT.split('/').slice(0, -1).join('/') || '.', { recursive: true });
-await fs.writeFile(OUT, JSON.stringify({ at: Date.now(), termIdx, sweepIdx, rows: [...rows.values()] }));
+const at = Date.now();
+await fs.writeFile(OUT, JSON.stringify({ at, termIdx, sweepIdx, rows: [...rows.values()] }));
+// new.json: solo lo nuevo y los DEX pagados de esta vuelta (pocos KB). La web lo consulta cada 30 s.
+const fresh = [...rows.values()].filter(r => !startMints.has(r.mint) || paidSeen.has(r.mint));
+await fs.writeFile(OUT.replace(/tokens\.json$/, 'new.json'), JSON.stringify({ at, rows: fresh }));
 console.log(`Listo: ${rows.size} tokens (${newTokens} nuevos), ${calls} llamadas en ${Math.round((Date.now() - T0) / 1000)} s`);

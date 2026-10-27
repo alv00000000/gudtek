@@ -554,6 +554,10 @@ button.al-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .pg-gap{color:var(--muted);padding:0 2px}
 
 .al-table td.al-empty{white-space:normal;overflow:visible}
+
+.sc-new{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;font:500 12px var(--f-body);cursor:pointer}
+.sc-new:hover{border-color:var(--fg);color:var(--fg)}
+.sc-new[aria-pressed="true"]{background:var(--up);border-color:var(--up);color:#0A0A0A}
 </style>
 </head>
 <body>
@@ -581,6 +585,7 @@ button.al-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         <button role="radio" data-tf="h6" aria-checked="false">6H</button>
         <button role="radio" data-tf="h24" aria-checked="true">24H</button>
       </div>
+      <button class="sc-new" id="newBtn" aria-pressed="false" title="Show the newest tokens first">New</button>
       <div class="fwrap">
         <button class="btn fbtn" id="filtersBtn" aria-expanded="false" aria-controls="filtersPanel"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2"/></svg>Filters<span class="active-count" id="activeCount"></span></button>
         <div class="fpanel" id="filtersPanel" role="dialog" aria-label="Filters" hidden>
@@ -1253,6 +1258,7 @@ function updHoldTxt(){ $('#holdTxt').textContent = hq.length ? `holders queued: 
 /* ---------- filtrado y orden ---------- */
 function getVal(r, k){
   switch (k){
+    case 'fresh': return Math.max(paidAt.get(r.mint) || 0, r.created || 0) || null;
     case 'age': return r.created ? (Date.now() - r.created) / 3.6e6 : null;
     case 'holders': return r.holders >= 0 ? r.holders : null;
     case 'vol': return r.vol?.[tf] ?? null;
@@ -2330,7 +2336,7 @@ async function dsCall(path){
 }
 function liveRender(){   // como mucho un repintado por segundo mientras llegan datos
   if (liveT) return;
-  liveT = setTimeout(() => { liveT = 0; if (!firstLoad) { render(); } }, 1000);
+  liveT = setTimeout(() => { liveT = 0; if (!firstLoad) { render(); } }, 500);
 }
 // Los perfiles, boosts, takeovers y anuncios tienen su propio límite (60/min por endpoint) aparte del de 300/min,
 // así que cada uno se consulta en su propio bucle, lo más rápido que permite su límite.
@@ -2400,6 +2406,16 @@ function pruneTokens(){
 setInterval(() => { if (!firstLoad) snapshot(); }, 60000);
 // arrancan después de la primera carga
 (function startLoops(){ if (firstLoad) return setTimeout(startLoops, 500); listsLoop(); metasLoop(); searchLoop(); sweepLoop(); })();
+
+/* botón New: los tokens más nuevos (DEX recién pagado o recién creados) arriba */
+let prevSort = null;
+function syncNewBtn(){ $('#newBtn').setAttribute('aria-pressed', sortKey === 'fresh'); }
+$('#newBtn').addEventListener('click', () => {
+  if (sortKey === 'fresh'){ [sortKey, sortDir] = prevSort || ['vol', -1]; }
+  else { prevSort = [sortKey, sortDir]; sortKey = 'fresh'; sortDir = -1; }
+  page = 0; renderHead(); requestResort(); render(); saveFilters(); syncNewBtn();
+});
+syncNewBtn();
 applyLayout(); renderAlerts(); updateBar(); walletLoop();
 
 /* ---------- caché de tokens en el navegador (IndexedDB) ----------
@@ -2441,7 +2457,21 @@ async function loadSharedList(){
     return j.rows.length;
   } catch { return 0; }
 }
-setInterval(async () => { if (!document.hidden && await loadSharedList()) liveRender(); }, 3 * 60000);
+// lo nuevo que publica el robot (archivo pequeño) cada 30 s; la lista completa cada 10 min
+let newAt = 0;
+async function loadNewList(){
+  try {
+    const r = await fetch('new.json?t=' + Math.floor(Date.now() / 15000), { cache:'no-cache' });
+    if (!r.ok) return 0;
+    const j = await r.json();
+    if (!j?.rows || j.at <= newAt) return 0;
+    newAt = j.at; let n = 0;
+    for (const o of j.rows) if (mergeRow(o)) n++;
+    return n;
+  } catch { return 0; }
+}
+setInterval(async () => { if (!document.hidden && await loadNewList()) liveRender(); }, 30000);
+setInterval(async () => { if (!document.hidden && await loadSharedList()) liveRender(); }, 10 * 60000);
 async function restoreTokenCache(){
   const c = await IDB.get('tokens');
   if (!c?.rows?.length) return false;
