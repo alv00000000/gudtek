@@ -161,6 +161,8 @@ const TERMS = [...'abcdefghijklmnopqrstuvwxyz', ...('sol pump bonk meme ai agent
 // combinaciones de dos letras (aa…zz) y números: cada búsqueda descubre tokens distintos
 for (const a of 'abcdefghijklmnopqrstuvwxyz') for (const b of 'abcdefghijklmnopqrstuvwxyz') TERMS.push(a + b);
 for (let i = 0; i <= 99; i++) TERMS.push(String(i));
+// y combinaciones de tres letras (aaa…zzz): llegan a los tokens menos conocidos
+for (const a of 'abcdefghijklmnopqrstuvwxyz') for (const b of 'abcdefghijklmnopqrstuvwxyz') for (const d of 'abcdefghijklmnopqrstuvwxyz') TERMS.push(a + b + d);
 for (let i = TERMS.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [TERMS[i], TERMS[j]] = [TERMS[j], TERMS[i]]; }   // orden aleatorio
 
 let flip = 0;
