@@ -2323,6 +2323,11 @@ const BIG_TERMS = [...'abcdefghijklmnopqrstuvwxyz', ...('sol pump bonk meme ai a
   'pizza burger taco sushi coffee beer wine banana apple cherry cookie cake candy sugar milk honey bread cheese bacon egg chicken ' +
   'game play win lose fun happy sad angry crazy weird strange funny cute baby tiny giant mega ultra super hyper turbo max pro based official ' +
   'token labs dao fi swap bot app net world city land club team army gang nation tribe family').split(' ')].filter(Boolean);
+
+// combinaciones de dos letras (aa…zz) y números: cada búsqueda descubre tokens distintos
+for (const a of 'abcdefghijklmnopqrstuvwxyz') for (const b of 'abcdefghijklmnopqrstuvwxyz') BIG_TERMS.push(a + b);
+for (let i = 0; i <= 99; i++) BIG_TERMS.push(String(i));
+for (let i = BIG_TERMS.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [BIG_TERMS[i], BIG_TERMS[j]] = [BIG_TERMS[j], BIG_TERMS[i]]; }   // orden aleatorio
 let dsNext = 0, termIdx = 0, sweepIdx = 0, liveT = 0;
 const dsQueue = [], dsQueued = new Set();
 function queueMint(m){ if (!dsQueued.has(m)) { dsQueued.add(m); dsQueue.push(m); } }

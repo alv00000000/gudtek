@@ -158,14 +158,19 @@ const TERMS = [...'abcdefghijklmnopqrstuvwxyz', ...('sol pump bonk meme ai agent
   'game play win lose fun happy sad angry crazy weird strange funny cute baby tiny giant mega ultra super hyper turbo max pro based official ' +
   'token labs dao fi swap bot app net world city land club team army gang nation tribe family').split(' ')].filter(Boolean);
 
+// combinaciones de dos letras (aa…zz) y números: cada búsqueda descubre tokens distintos
+for (const a of 'abcdefghijklmnopqrstuvwxyz') for (const b of 'abcdefghijklmnopqrstuvwxyz') TERMS.push(a + b);
+for (let i = 0; i <= 99; i++) TERMS.push(String(i));
+for (let i = TERMS.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [TERMS[i], TERMS[j]] = [TERMS[j], TERMS[i]]; }   // orden aleatorio
+
 let flip = 0;
 while (timeLeft() > 15000){
   flip++;
   try {
-    if (flip % 3 === 0){                         // 1 de cada 3 llamadas: búsqueda
+    if (flip % 2 === 0){                         // 1 de cada 2 llamadas: búsqueda (descubre tokens nuevos)
       const q = TERMS[termIdx++ % TERMS.length];
       const j = await ds('/latest/dex/search?q=' + encodeURIComponent(q)); ingest(j.pairs);
-    } else {                                     // 2 de cada 3: datos de 30 tokens (primero los nuevos, luego los más antiguos)
+    } else {                                     // la otra: datos de 30 tokens (primero los nuevos, luego los más antiguos)
       let batch = queue.splice(0, 30); batch.forEach(m => queued.delete(m));
       for (const m of pairsOf.keys()) { if (batch.length >= 30) break; if (!rows.has(m) && !batch.includes(m)) batch.push(m); }
       if (batch.length < 30){
