@@ -224,7 +224,7 @@ console.log('PumpPortal: tokens/migraciones recibidos en esta vuelta:', pumpSeen
 console.log('DEX pagados vistos en esta pasada:', paidSeen.size);
 
 // 5) holders y launchpad desde Jupiter para los tokens con más volumen (100 por llamada)
-try {
+async function jupStep(){ try {
   const top = [...rows.values()].sort((a,b) => (b.vol?.h24 || 0) - (a.vol?.h24 || 0)).slice(0, 1000).map(r => r.mint);
   for (let i = 0; i < top.length && timeLeft() > 2000; i += 100){
     const r = await fetch(JUP + '/tokens/v2/search?query=' + top.slice(i, i + 100).join(','));
@@ -241,18 +241,38 @@ try {
     }
     await sleep(1200);
   }
-} catch (e) { console.log('Jupiter:', e.message); }
+} catch (e) { console.log('Jupiter:', e.message); } }
+// 6) global fees (SOL pagados en comisiones por todos los traders) desde el servicio de datos de Jupiter:
+//    los 1.000 con más volumen y otros 1.000 en rotación, así con el tiempo los tienen todos
+const DATAPI = process.env.DATAPI_URL || 'https://datapi.jup.ag';
+let feeIdx = prevActive?.feeIdx || 0, feesGot = 0;
+async function feeStep(){
+  try {
+    const byVol = [...rows.values()].sort((a,b) => (b.vol?.h24 || 0) - (a.vol?.h24 || 0)).map(r => r.mint);
+    const top = byVol.slice(0, 1000), rest = byVol.slice(1000), list = [...top];
+    for (let k = 0; k < 1000 && k < rest.length; k++) list.push(rest[(feeIdx++) % rest.length]);
+    for (let i = 0; i < list.length && timeLeft() > 0; i += 100){
+      const r = await fetch(DATAPI + '/v1/assets/search?query=' + list.slice(i, i + 100).join(','));
+      if (r.status === 429){ await sleep(3000); i -= 100; continue; }
+      if (!r.ok) { console.log('Fees: HTTP', r.status); break; }
+      for (const t of await r.json()){ const row = rows.get(t.id); if (row && Number.isFinite(t.fees)){ row.fees = Math.round(t.fees * 1000) / 1000; feesGot++; } }
+      await sleep(250);
+    }
+  } catch (e) { console.log('Fees:', e.message); }
+}
+await Promise.all([jupStep(), feeStep()]);
+console.log('Global fees actualizados:', feesGot);
 
 await fs.mkdir(OUT.split('/').slice(0, -1).join('/') || '.', { recursive: true });
 const at = Date.now();
 // activos = como DexScreener: con volumen en las últimas 24 h, o creados en las últimas 24 h
 const isActive = r => (r.vol?.h24 || 0) > 0 || (r.created && at - r.created < 86400000);
 for (const r of [...rows.values()]) if (!isActive(r)) {
-  archive.set(r.mint, { mint:r.mint, symbol:r.symbol, name:r.name, img:r.img, pool:r.pool, dexId:r.dexId, lp:r.lp, created:r.created, mcap:r.mcap, holders:r.holders, x:r.x, site:r.site, paid:r.paid, seen:r.seen });
+  archive.set(r.mint, { mint:r.mint, symbol:r.symbol, name:r.name, img:r.img, pool:r.pool, dexId:r.dexId, lp:r.lp, created:r.created, mcap:r.mcap, holders:r.holders, fees:r.fees, x:r.x, site:r.site, paid:r.paid, seen:r.seen });
   rows.delete(r.mint);
 }
 for (const [m, t] of pending) if (at - t > 3600000) pending.delete(m);
-await fs.writeFile(OUT, JSON.stringify({ at, termIdx, sweepIdx, archIdx, pending: [...pending], rows: [...rows.values()] }));
+await fs.writeFile(OUT, JSON.stringify({ at, termIdx, sweepIdx, archIdx, feeIdx, pending: [...pending], rows: [...rows.values()] }));
 await fs.writeFile(OUT.replace(/tokens\.json$/, 'archive.json'), JSON.stringify({ at, rows: [...archive.values()] }));
 console.log(`Activos: ${rows.size} · Histórico: ${archive.size} · Pendientes de PumpPortal: ${pending.size}`);
 // new.json: solo lo nuevo y los DEX pagados de esta vuelta (pocos KB). La web lo consulta cada 30 s.

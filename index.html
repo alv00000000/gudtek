@@ -574,6 +574,9 @@ button.al-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .icobtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .al-head .af-wrap{margin-left:auto}
 .al-head{gap:8px}
+.al-src{flex:none;font:700 9px/1 var(--f-mono);letter-spacing:.05em;padding:3px 5px;border-radius:4px;border:1px solid var(--line);color:var(--muted);margin-right:6px}
+a.al-trader{text-decoration:none;color:var(--muted)}
+a.al-trader:hover{color:var(--fg)}
 </style>
 </head>
 <body>
@@ -701,11 +704,16 @@ button.al-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
           <div class="fp-head"><span class="fp-title">Alert filters</span><span class="fp-active" id="afActive"></span><button class="fp-link" id="afReset">Reset</button><button class="fp-x" id="afClose" aria-label="Close alert filters"><svg viewBox="0 0 16 16" width="14" height="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button></div>
           <div class="fp-body">
             <div class="fp-search"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.5 10.5L14 14"/></svg><input type="text" id="afQ" placeholder="Search token" autocomplete="off" aria-label="Search token"></div>
+            <section class="fp-sec"><h3>Show</h3><div class="fp-chips" id="afSrcs">
+              <button class="chip" data-afs="wallets">My wallets</button><button class="chip" data-afs="mid">Midcaps trades</button><button class="chip" data-afs="high">Highcaps trades</button>
+            </div>
+            <p class="fp-hint" style="margin:0">Midcaps and Highcaps trades follow the filters of each token list.</p></section>
             <section class="fp-sec"><h3>Type</h3><div class="fp-chips" id="afTypes">
               <button class="chip" data-aft="buy">Buy</button><button class="chip" data-aft="sell">Sell</button><button class="chip" data-aft="all">Sold all</button><button class="chip" data-aft="pump">Pump</button><button class="chip" data-aft="dump">Dump</button>
             </div></section>
             <section class="fp-sec"><h3>Wallets <span class="fp-tf">· none selected = all</span></h3><div class="fp-chips" id="afWallets"></div></section>
             <section class="fp-sec"><h3>Trade size</h3>
+              <div class="fp-range"><label for="afListMin">List trades from</label><div class="fp-in"><span class="u">◎</span><input type="text" id="afListMin" placeholder="0.5" inputmode="decimal" autocomplete="off"></div><span></span></div>
               <div class="fp-range"><label for="afMinSol">Min amount</label><div class="fp-in"><span class="u">◎</span><input type="text" id="afMinSol" placeholder="Min" inputmode="decimal" autocomplete="off"></div><div class="fp-in"><span class="u">◎</span><input type="text" id="afMaxSol" placeholder="Max" inputmode="decimal" autocomplete="off"></div></div>
             </section>
             <section class="fp-sec"><h3>Token</h3>
@@ -898,7 +906,7 @@ const boardTfs = () => new Set(BOARDS.map(b => boardVal(b, 'tf')));
 const BOARD_EL = new Set(['count','tfSeg','thead','tbody','pager','filtersBtn','activeCount']);
 const RANGES = [
   ['mcap','Market cap ($)'], ['chg','MC change in timeframe (%)'], ['vol','Volume in timeframe ($)'], ['volchg','Volume change (%)'],
-  ['holders','Holders'], ['hchg','Holder change (%)'], ['liq','Liquidity ($)'], ['tx','Txns in timeframe'], ['age','Age (h)'],
+  ['holders','Holders'], ['hchg','Holder change (%)'], ['liq','Liquidity ($)'], ['tx','Txns in timeframe'], ['age','Age (h)'], ['fees','Global fees (SOL)'],
 ];
 
 const store = {
@@ -1216,6 +1224,7 @@ async function loadJupiter(only){
   for (let i = 0; i < mints.length; i += 100){
     const t0 = Date.now();
     try {
+      loadFees(mints.slice(i, i + 100));
       const list = await jupGet(mints.slice(i, i + 100)); ok++;
       for (const t of Array.isArray(list) ? list : []){
         const row = tokens.get(t.id); if (!row) continue;
@@ -1237,6 +1246,14 @@ async function loadJupiter(only){
   $('#note').textContent = ok
     ? 'All market data comes from DexScreener. Holders and candlestick charts come from Jupiter, because DexScreener\'s API doesn\'t provide them.'
     : 'Jupiter isn\'t responding right now: holders are fetched from GeckoTerminal one by one, and their change is calculated from the history stored in your browser.';
+}
+// global fees: SOL pagados en comisiones por todos los traders del token (servicio de datos de Jupiter)
+const DATAPI = 'https://datapi.jup.ag';
+async function loadFees(mints){
+  try {
+    const r = await fetch(`${DATAPI}/v1/assets/search?query=${mints.join(',')}`); if (!r.ok) return;
+    for (const t of await r.json()){ const row = tokens.get(t.id); if (row && Number.isFinite(t.fees)) row.fees = Math.round(t.fees * 1000) / 1000; }
+  } catch {}
 }
 function addSrc(m, s){ if (!srcOf.has(m)) srcOf.set(m, new Set()); srcOf.get(m).add(s); }
 
@@ -1378,6 +1395,7 @@ function tokenCell(r){
 function render(){ forBoards(renderBoard); }
 function renderBoard(){
   const rows = currentRows();
+  CB.pass = new Set(rows.map(r => r.mint));   // tokens que pasan los filtros de esta tabla (las alertas los usan)
   const total = [...tokens.values()].filter(r => r.pool).length;
   let list;
   const pages = Math.max(1, Math.ceil(rows.length / pageSize));
@@ -1745,7 +1763,7 @@ function updateFacets(nRows){
   $('#fpActive').textContent = n ? `${n} active` : '';
   $('#fpTitle').textContent = `${CB.title} filters`;
   $('#fpCount').textContent = `${(nRows ?? currentRows().length).toLocaleString('en-US')} tokens match`;
-  document.querySelectorAll('.fp-tf').forEach(el => el.textContent = `· ${TF_LABEL[tf]}`);
+  document.querySelectorAll('#ranges .fp-tf').forEach(el => el.textContent = `· ${TF_LABEL[tf]}`);
 }
 
 function setState(kind, txt){ $('#dot').className = 'dot ' + (kind||''); $('#stateTxt').textContent = txt; }
@@ -1754,7 +1772,7 @@ setInterval(() => { if (lastUpdate) $('#updTxt').textContent = 'updated ' + Math
 /* ---------- controles ---------- */
 const RANGE_GROUPS = [
   { title:'Market', rows:[['mcap','Market cap','$'], ['chg','MC change','%'], ['liq','Liquidity','$'], ['age','Age','h']] },
-  { title:'Activity', rows:[['vol','Volume','$'], ['volchg','Volume change','%'], ['tx','Transactions','#']] },
+  { title:'Activity', rows:[['vol','Volume','$'], ['volchg','Volume change','%'], ['tx','Transactions','#'], ['fees','Global fees','◎']] },
   { title:'Holders', rows:[['holders','Holders','#'], ['hchg','Holder change','%']] },
 ];
 $('#ranges').innerHTML = RANGE_GROUPS.map(g => `<section class="fp-sec"><h3>${g.title} <span class="fp-tf"></span></h3>
@@ -1763,7 +1781,7 @@ $('#ranges').innerHTML = RANGE_GROUPS.map(g => `<section class="fp-sec"><h3>${g.
     <div class="fp-in"><span class="u">${unit}</span><input type="text" id="${k}-max" data-r="${k}" data-i="1" placeholder="Max" inputmode="decimal" autocomplete="off"></div>
   </div>`).join('')}</section>`).join('');
 
-let ft; function refilter(){ const b = CB; clearTimeout(ft); ft = setTimeout(() => withBoard(b, () => { limit = 100; page = 0; requestResort(); render(); fillHolders(); saveFilters(); }), 150); }
+let ft; function refilter(){ const b = CB; clearTimeout(ft); ft = setTimeout(() => withBoard(b, () => { limit = 100; page = 0; requestResort(); render(); fillHolders(); saveFilters(); renderAlerts(); }), 150); }
 let fpBoard = BOARDS[0];
 const onFP = fn => (...a) => withBoard(fpBoard, () => fn(...a));
 $('#ranges').addEventListener('input', onFP(e => {
@@ -1895,7 +1913,8 @@ wallets.forEach((w, i) => { if (!w.emoji) w.emoji = ['🐸','🐳','🦊','🐶'
 const saveWallets = () => store.set('gt-wallets', wallets);
 let alerts = store.get('gt-alerts', []);     // más reciente primero
 alerts.sort((x, y) => y.ts - x.ts);
-const saveAlerts = () => store.set('gt-alerts', alerts.slice(0, 150));
+let saveAT = 0;
+const saveAlerts = () => { if (!saveAT) saveAT = setTimeout(() => { saveAT = 0; store.set('gt-alerts', alerts.slice(0, 200)); }, 1000); };
 let alertFilter = 'all';
 
 /* ---------- utilidades ---------- */
@@ -2063,9 +2082,22 @@ function pushAlert(a){
   if (alerts.some(x => x.id === a.id)) return;
   alerts.unshift(a);
   alerts.sort((x, y) => y.ts - x.ts);
-  if (alerts.length > 150) alerts.length = 150;
+  trimAlerts();
   a._new = true;
   saveAlerts(); renderAlerts(); beep(a.kind);
+}
+// los trades de las listas llegan en grupo: se añaden de una vez y se pinta una sola vez
+const alertIds = () => new Set(alerts.map(x => x.id));
+function pushAlerts(list){
+  const have = alertIds(); let n = 0;
+  for (const a of list) if (!have.has(a.id)){ a._new = true; alerts.push(a); n++; }
+  if (!n) return;
+  alerts.sort((x, y) => y.ts - x.ts); trimAlerts(); saveAlerts(); renderAlerts();
+}
+// como mucho 300 trades de las listas y 150 avisos de wallets / subidas, para que unos no echen a los otros
+function trimAlerts(){
+  let lt = 0, ot = 0;
+  alerts = alerts.filter(a => a.src ? ++lt <= 300 : ++ot <= 150);
 }
 const SOL_ICON = 'https://dd.dexscreener.com/ds-data/tokens/solana/So11111111111111111111111111111111111111112.png';
 const USDC_ICON = 'https://dd.dexscreener.com/ds-data/tokens/solana/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.png';
@@ -2083,7 +2115,9 @@ function alertRow(a){
   const tone = a.kind === 'buy' || a.kind === 'pump' ? 'up' : 'down';
   const type = a.kind === 'buy' ? 'Buy' : a.kind === 'sell' ? (a.all ? 'All' : 'Sell') : a.kind === 'pump' ? 'Pump' : 'Dump';
   const typeTitle = a.kind === 'sell' && a.all ? 'Sold the whole position' : '';
-  const who = trade
+  const who = a.src
+    ? `<span class="al-src">${a.src === 'mid' ? 'MID' : 'HIGH'}</span><a class="al-name mut al-trader" href="https://solscan.io/account/${esc(a.trader || '')}" target="_blank" rel="noopener" title="Trader ${esc(a.trader || '')}">${esc(shortAddr(a.trader || '????????'))}</a>`
+    : trade
     ? `<span class="al-emoji">${esc(walletEmoji(a.wallet))}</span><span class="al-name ${tone}" title="${esc(a.wallet)}">${esc(walletName(a.wallet))}</span>`
     : `<span class="al-emoji">${a.kind === 'pump' ? '🚀' : '🩸'}</span><span class="al-name mut">Price spike</span>`;
   const amount = trade
@@ -2104,7 +2138,7 @@ function alertRow(a){
 }
 function renderAlerts(){
   const box = $('#alertsBody'); if (!box) return;
-  const list = alerts.filter(a => (alertFilter === 'all' || (alertFilter === 'wallets' ? (a.kind === 'buy' || a.kind === 'sell') : (a.kind === 'pump' || a.kind === 'dump'))) && passAF(a));
+  const list = alerts.filter(passAF);
   updateAF(list.length);
   $('#alertsCount').textContent = list.length ? list.length : '';
   if (!list.length){
@@ -2259,13 +2293,21 @@ $('#emojiCustom').addEventListener('keydown', e => { if (e.key === 'Enter') setE
 
 /* ---------- filtros de las alertas ---------- */
 const AF_KEYS = ['buy','sell','all','pump','dump'];
-const AF = Object.assign({ types: AF_KEYS.slice(), wallets: [], q:'', minSol:null, maxSol:null, mcMin:null, mcMax:null, ageMin:null, ageMax:null }, store.get('gt-alert-filters', {}));
+const AF_DEFAULT = () => ({ types: AF_KEYS.slice(), srcs: ['wallets','mid','high'], listMin: 0.5, wallets: [], q:'', minSol:null, maxSol:null, mcMin:null, mcMax:null, ageMin:null, ageMax:null });
+const AF = Object.assign(AF_DEFAULT(), store.get('gt-alert-filters', {}));
 const saveAF = () => store.set('gt-alert-filters', AF);
 const alertType = a => a.kind === 'sell' && a.all ? 'all' : a.kind;
 function passAF(a){
   if (!AF.types.includes(alertType(a))) return false;
   const trade = a.kind === 'buy' || a.kind === 'sell';
-  if (AF.wallets.length && trade && !AF.wallets.includes(a.wallet)) return false;
+  if (a.src){   // trade de un token de Midcaps / Highcaps: tiene que seguir pasando los filtros de esa lista
+    if (!AF.srcs.includes(a.src)) return false;
+    const b = BOARDS.find(x => x.key === a.src); if (b?.pass && !b.pass.has(a.mint)) return false;
+    if (AF.listMin != null && !(a.sol >= AF.listMin)) return false;
+  } else if (a.wallet){
+    if (!AF.srcs.includes('wallets')) return false;
+    if (AF.wallets.length && !AF.wallets.includes(a.wallet)) return false;
+  }
   if (AF.q){ const q = AF.q.toLowerCase(); if (!((a.symbol || '').toLowerCase().includes(q) || (a.mint || '').toLowerCase().startsWith(q))) return false; }
   if (trade && (AF.minSol != null || AF.maxSol != null)){
     const s = a.sol != null ? a.sol : (a.usd != null && solUsd ? a.usd / solUsd : null);
@@ -2285,6 +2327,7 @@ function passAF(a){
 }
 function afActiveCount(){
   let n = AF.types.length < AF_KEYS.length ? 1 : 0;
+  n += AF.srcs.length < 3 ? 1 : 0;
   n += AF.wallets.length ? 1 : 0; n += AF.q ? 1 : 0;
   for (const k of ['minSol','maxSol','mcMin','mcMax','ageMin','ageMax']) if (AF[k] != null) n++;
   return n;
@@ -2297,6 +2340,8 @@ function updateAF(matching){
 }
 function renderAFPanel(){
   document.querySelectorAll('[data-aft]').forEach(b => b.setAttribute('aria-pressed', AF.types.includes(b.dataset.aft)));
+  document.querySelectorAll('[data-afs]').forEach(b => b.setAttribute('aria-pressed', AF.srcs.includes(b.dataset.afs)));
+  $('#afListMin').value = AF.listMin ?? '';
   $('#afWallets').innerHTML = wallets.length
     ? wallets.map(w => `<button class="chip" data-afw="${esc(w.address)}" aria-pressed="${AF.wallets.includes(w.address)}"><span>${esc(w.emoji || '👛')}</span>${esc(w.label || shortAddr(w.address))}</button>`).join('')
     : '<span class="fp-hint" style="margin:0">No wallets yet. Add them in Settings → Wallets.</span>';
@@ -2312,16 +2357,18 @@ function toggleAF(open){
 $('#afBtn').addEventListener('click', e => { e.stopPropagation(); toggleAF(); });
 $('#afClose').addEventListener('click', () => toggleAF(false));
 $('#afDone').addEventListener('click', () => toggleAF(false));
-$('#afReset').addEventListener('click', () => { Object.assign(AF, { types: AF_KEYS.slice(), wallets: [], q:'', minSol:null, maxSol:null, mcMin:null, mcMax:null, ageMin:null, ageMax:null }); saveAF(); renderAFPanel(); renderAlerts(); });
+$('#afReset').addEventListener('click', () => { Object.assign(AF, AF_DEFAULT()); saveAF(); renderAFPanel(); renderAlerts(); });
 document.addEventListener('click', e => {
   const tb = e.target.closest('[data-aft]');
   if (tb){ const k = tb.dataset.aft; AF.types = AF.types.includes(k) ? AF.types.filter(x => x !== k) : [...AF.types, k]; saveAF(); renderAFPanel(); renderAlerts(); return; }
+  const sb = e.target.closest('[data-afs]');
+  if (sb){ const k = sb.dataset.afs; AF.srcs = AF.srcs.includes(k) ? AF.srcs.filter(x => x !== k) : [...AF.srcs, k]; saveAF(); renderAFPanel(); renderAlerts(); return; }
   const wb = e.target.closest('[data-afw]');
   if (wb){ const a = wb.dataset.afw; AF.wallets = AF.wallets.includes(a) ? AF.wallets.filter(x => x !== a) : [...AF.wallets, a]; saveAF(); renderAFPanel(); renderAlerts(); return; }
   if (!$('#afPanel').hidden && !e.target.closest('.af-wrap')) toggleAF(false);
 });
 $('#afPanel').addEventListener('input', e => {
-  const map = { afQ:'q', afMinSol:'minSol', afMaxSol:'maxSol', afMcMin:'mcMin', afMcMax:'mcMax', afAgeMin:'ageMin', afAgeMax:'ageMax' };
+  const map = { afListMin:'listMin', afQ:'q', afMinSol:'minSol', afMaxSol:'maxSol', afMcMin:'mcMin', afMcMax:'mcMax', afAgeMin:'ageMin', afAgeMax:'ageMax' };
   const k = map[e.target.id]; if (!k) return;
   if (k === 'q') AF.q = e.target.value.trim();
   else { const v = parseAmt(e.target.value); AF[k] = v; e.target.closest('.fp-in').style.borderColor = e.target.value && v == null ? 'var(--down)' : ''; }
@@ -2505,6 +2552,49 @@ setInterval(() => {
 }, 15000);
 connectPumpPortal();
 applyLayout(); renderAlerts(); updateBar(); walletLoop();
+
+/* ---------- trades en vivo de los tokens de Midcaps y Highcaps ----------
+   Se leen los últimos trades de cada token (servicio de datos de Jupiter): primero los de las páginas que estás viendo,
+   y en rotación los 60 primeros de cada lista. Solo entran tokens que pasan los filtros de su lista. */
+const tradeLast = new Map();   // mint -> último actionId visto
+const idGt = (a, b) => a.length !== b.length ? a.length > b.length : a > b;
+async function pollTrades(mint, src){
+  let j; try { const r = await fetch(`${DATAPI}/v1/txs/${mint}`); if (!r.ok) return; j = await r.json(); } catch { return; }
+  const txs = Array.isArray(j?.txs) ? j.txs : []; if (!txs.length) return;
+  const last = tradeLast.get(mint), now = Date.now();
+  tradeLast.set(mint, txs.reduce((m, t) => (!m || idGt(String(t.actionId), m)) ? String(t.actionId) : m, last || ''));
+  const row = tokens.get(mint), out = [];
+  for (const t of txs){
+    const ts = Date.parse(t.timestamp) || now;
+    if (last ? !idGt(String(t.actionId), last) : now - ts > 30000) continue;   // la primera vez, solo lo de los últimos 30 s
+    if (t.isMev || (t.type !== 'buy' && t.type !== 'sell')) continue;
+    const sol = num(t.nativeVolume); if (!(sol >= (AF.listMin ?? 0))) continue;
+    const mc = row?.mcap != null && row.price > 0 && num(t.usdPrice) ? row.mcap * num(t.usdPrice) / row.price : row?.mcap ?? null;
+    out.push({ id: (t.txHash || t.actionId) + mint, kind: t.type, ts, mint, src, trader: t.traderAddress, sol, usd: num(t.usdVolume), sig: t.txHash,
+      symbol: row?.symbol, img: row?.img, mcap: mc, url: row?.url, created: row?.created, lp: row?.lp, dexId: row?.dexId });
+  }
+  if (out.length) pushAlerts(out);
+}
+let tradeRot = 0;
+(async function tradesLoop(){
+  for (;;){
+    if (document.hidden || firstLoad || !AF.srcs.some(k => k === 'mid' || k === 'high')){ await sleep(1000); continue; }
+    const vis = [], top = [];
+    for (const b of BOARDS){
+      if (!AF.srcs.includes(b.key)) continue;
+      withBoard(b, () => { const rows = currentRows();
+        rows.slice(page * pageSize, (page + 1) * pageSize).forEach(r => vis.push([r.mint, b.key]));
+        rows.slice(0, 60).forEach(r => top.push([r.mint, b.key])); });
+    }
+    const seen = new Set(), list = [];
+    const add = x => { if (!seen.has(x[0])){ seen.add(x[0]); list.push(x); } };
+    vis.forEach(add);
+    for (let k = 0; k < 16 && top.length; k++) add(top[tradeRot++ % top.length]);
+    const t0 = Date.now();
+    await pool(list, 3, async ([m, src]) => { await pollTrades(m, src); await sleep(250); });
+    await sleep(Math.max(300, 1500 - (Date.now() - t0)));
+  }
+})();
 
 /* ---------- caché de tokens en el navegador (IndexedDB) ----------
    Al cerrar o cada 20 s se guarda la lista; al abrir la página se pinta al instante y después se actualiza. */
