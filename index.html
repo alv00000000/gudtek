@@ -37,11 +37,11 @@ body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--f-body);
   padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));padding-block:0 32px}
 button,input,select{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.wrap{max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding-top:22px}
+.wrap{max-width:1804px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding-top:22px}
 
 header.top{position:sticky;top:0;z-index:20;background:var(--bg);margin-inline:calc(-1 * max(16px, env(safe-area-inset-left,0px)));
   padding:14px max(16px, env(safe-area-inset-right,0px)) 12px max(16px, env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
-.top-inner{max-width:1440px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
+.top-inner{max-width:1772px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
 .brand{display:flex;align-items:baseline;gap:10px}
 .brand h1{font:800 22px/1 var(--f-display);letter-spacing:-.01em;margin:0}
 .brand h1{letter-spacing:.04em}
@@ -308,18 +308,30 @@ body.noscroll{overflow:hidden}
 body{padding-bottom:56px}
 
 /* ---------- tableros (screener + alertas) ---------- */
-.boards{display:grid;gap:16px;align-items:start}
-.boards[data-layout="side"]{grid-template-columns:minmax(0,1fr) 580px}
-.boards[data-layout="side"].swap{grid-template-columns:580px minmax(0,1fr)}
+.boards{display:grid;gap:16px;align-items:start;justify-content:center;grid-auto-flow:row dense}
+.boards[data-layout="side"]{grid-template-columns:repeat(3, minmax(0,580px))}
 .boards[data-layout="side"].swap #boardAlerts{order:-1}
-.boards[data-layout="stack"]{grid-template-columns:minmax(0,1fr)}
+.boards[data-layout="stack"]{grid-template-columns:minmax(0,580px)}
 .boards[data-layout="stack"].swap #boardAlerts{order:-1}
-.boards[data-layout="screener"]{grid-template-columns:minmax(0,1fr)}
+.boards[data-layout="screener"]{grid-template-columns:repeat(2, minmax(0,580px))}
 .boards[data-layout="screener"] #boardAlerts{display:none}
-.boards[data-layout="alerts"]{grid-template-columns:minmax(0,1fr)}
-.boards[data-layout="alerts"] #boardScreener{display:none}
+.boards[data-layout="screener"].swap [data-board="high"]{order:-1}
+.boards[data-layout="alerts"]{grid-template-columns:minmax(0,580px)}
+.boards[data-layout="alerts"] .screener{display:none}
 .board{min-width:0;display:flex;flex-direction:column;gap:16px}
-@media (max-width:1250px){ .boards[data-layout="side"], .boards[data-layout="side"].swap{grid-template-columns:minmax(0,1fr)} }
+/* pantallas medianas: las dos tablas de tokens una encima de otra y las alertas al lado */
+@media (max-width:1830px){
+  .boards[data-layout="side"]{grid-template-columns:repeat(2, minmax(0,580px))}
+  .boards[data-layout="side"] .screener{grid-column:1}
+  .boards[data-layout="side"] #boardAlerts{grid-column:2;grid-row:1 / span 2}
+  .boards[data-layout="side"].swap .screener{grid-column:2}
+  .boards[data-layout="side"].swap #boardAlerts{grid-column:1}
+}
+@media (max-width:1230px){
+  .boards[data-layout="side"], .boards[data-layout="screener"]{grid-template-columns:minmax(0,580px)}
+  .boards[data-layout="side"] .screener, .boards[data-layout="side"] #boardAlerts, .boards[data-layout="side"].swap .screener, .boards[data-layout="side"].swap #boardAlerts{grid-column:auto;grid-row:auto}
+  .boards[data-layout="side"] #boardAlerts{position:static;max-height:70vh}
+}
 
 /* ---------- panel de alertas ---------- */
 #boardAlerts{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;gap:0}
@@ -329,9 +341,6 @@ body{padding-bottom:56px}
 .al-live{width:8px;height:8px;border-radius:50%;background:var(--up);box-shadow:0 0 0 3px color-mix(in srgb, var(--up) 25%, transparent);animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb, var(--up) 0%, transparent)}}
 #alertsCount{font:500 11px var(--f-mono);color:var(--muted)}
-.al-tabs{display:flex;gap:4px;margin-left:auto}
-.al-tabs button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer}
-.al-tabs button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .al-clear{background:none;border:0;color:var(--muted);font-size:12px;cursor:pointer;padding:4px 6px;border-radius:6px}
 .al-clear:hover{color:var(--fg);background:var(--panel-2)}
 .al-scroll{overflow:auto;min-height:0;flex:1}
@@ -400,7 +409,7 @@ body{padding-bottom:56px}
 /* ---------- barra inferior ---------- */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--panel);border-top:1px solid var(--line);
   padding:0 max(16px, env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px, env(safe-area-inset-left,0px))}
-.bar-inner{max-width:1440px;margin:0 auto;height:40px;display:flex;align-items:center;gap:16px;font:12px var(--f-mono);color:var(--muted)}
+.bar-inner{max-width:1772px;margin:0 auto;height:40px;display:flex;align-items:center;gap:16px;font:12px var(--f-mono);color:var(--muted)}
 .bar-conn{display:flex;align-items:center;gap:8px;color:var(--fg);font-weight:500}
 .bar-dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .bar-dot.ok{background:var(--up);box-shadow:0 0 0 3px color-mix(in srgb, var(--up) 25%, transparent)}
@@ -498,28 +507,24 @@ td.al-mc{display:table-cell;margin:0;color:var(--muted);font:500 14px var(--f-bo
 #boardAlerts .al-scroll{border-radius:0 0 12px 12px}
 
 /* screener con el mismo diseño que Live alerts */
-#boardScreener{background:var(--panel);border:1px solid var(--line);border-radius:12px;gap:0}
-#boardScreener .sc-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);margin:0;flex-wrap:wrap;justify-content:flex-start}
-#boardScreener .sc-head .controls{margin-left:auto;gap:6px}
+.screener{background:var(--panel);border:1px solid var(--line);border-radius:12px;gap:0}
+.screener .sc-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);margin:0;flex-wrap:wrap;justify-content:flex-start}
+.screener .sc-head .controls{margin-left:auto;gap:6px}
 .sc-count{font:500 11px var(--f-mono);color:var(--muted)}
 .sc-of{opacity:.7}
-#boardScreener .seg{background:none;border:0;padding:0;gap:4px}
-#boardScreener .seg-lbl{display:none}
-#boardScreener .seg button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;font:500 12px var(--f-body)}
-#boardScreener .seg button[aria-checked="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-#filtersBtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:999px;padding:4px 10px;font:500 12px var(--f-body)}
-#filtersBtn:hover{border-color:var(--fg)}
-#filtersBtn svg{width:13px;height:13px}
-#filtersBtn .active-count:not(:empty){background:var(--fg);color:var(--bg);border-radius:999px;padding:0 6px;font:600 10px/16px var(--f-mono)}
-#boardScreener .tablebox{border:0;border-radius:0 0 12px 12px;background:transparent}
-#boardScreener thead th{background:var(--panel-2);font:500 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 14px;border-bottom:1px solid var(--line)}
-#boardScreener thead th:first-child{padding-left:14px}
-#boardScreener .th-tf{border:0;padding:0;margin-left:5px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);opacity:.65}
+.screener .seg{background:none;border:0;padding:0;gap:4px}
+.screener .seg-lbl{display:none}
+.screener .seg button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;font:500 12px var(--f-body)}
+.screener .seg button[aria-checked="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.screener .tablebox{border:0;border-radius:0 0 12px 12px;background:transparent}
+.screener thead th{background:var(--panel-2);font:500 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 14px;border-bottom:1px solid var(--line)}
+.screener thead th:first-child{padding-left:14px}
+.screener .th-tf{border:0;padding:0;margin-left:5px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);opacity:.65}
 
 /* misma altura de cabeceras en los dos paneles */
-.al-head, #boardScreener .sc-head{min-height:54px;box-sizing:border-box}
-.al-table thead th, #boardScreener thead th{height:32px;line-height:1;vertical-align:middle;box-sizing:border-box}
-#boardScreener thead .th-ico{width:13px;height:13px;vertical-align:-2px}
+.al-head, .screener .sc-head{min-height:54px;box-sizing:border-box}
+.al-table thead th, .screener thead th{height:32px;line-height:1;vertical-align:middle;box-sizing:border-box}
+.screener thead .th-ico{width:13px;height:13px;vertical-align:-2px}
 
 /* gráficas ajustadas a la columna */
 .spk svg{width:100%;max-width:150px;height:auto;display:block}
@@ -535,13 +540,17 @@ button.al-sym:hover{opacity:.8}
 button.al-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* tabla de tokens compacta y paginada */
-#boardScreener thead th{padding:8px 10px}
-#boardScreener thead th:first-child, #boardScreener tbody td:first-child{padding-left:14px}
-#boardScreener thead th:last-child, #boardScreener tbody td:last-child{width:166px;padding-right:14px}
-#boardScreener .info{min-width:0;overflow:hidden}
-#boardScreener .namebtn{max-width:100%;overflow:hidden}
-#boardScreener .tok .nm{max-width:none;overflow:hidden;text-overflow:ellipsis}
-#boardScreener .vc .v{white-space:nowrap}
+.screener thead th{padding:8px 10px}
+.screener thead th:first-child, .screener tbody td:first-child{padding-left:14px}
+.screener thead th:not(:first-child), .screener tbody td:not(:first-child){width:84px;padding-left:6px;padding-right:6px}
+.screener thead th:last-child, .screener tbody td:last-child{width:124px;padding-right:12px}
+.screener .spk, .screener .spk svg{max-width:112px}
+.screener thead th{white-space:nowrap;overflow:hidden}
+.screener .th-tf{margin-left:3px;letter-spacing:.02em}
+.screener .info{min-width:0;overflow:hidden}
+.screener .namebtn{max-width:100%;overflow:hidden}
+.screener .tok .nm{max-width:none;overflow:hidden;text-overflow:ellipsis}
+.screener .vc .v{white-space:nowrap}
 #moreBox{display:none !important}
 .pager{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-top:1px solid var(--line)}
 .pg-info{font:500 11px var(--f-mono);color:var(--muted)}
@@ -555,9 +564,16 @@ button.al-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 .al-table td.al-empty{white-space:normal;overflow:visible}
 
-.sc-new{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;font:500 12px var(--f-body);cursor:pointer}
-.sc-new:hover{border-color:var(--fg);color:var(--fg)}
-.sc-new[aria-pressed="true"]{background:var(--up);border-color:var(--up);color:#0A0A0A}
+
+/* botones solo con icono (filtros, borrar alertas) */
+.icobtn{position:relative;display:inline-grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;cursor:pointer;flex:none}
+.icobtn:hover, .icobtn[aria-expanded="true"]{border-color:var(--fg);color:var(--fg)}
+.icobtn svg{display:block}
+.ico-badge:empty{display:none}
+.ico-badge{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:var(--fg);color:var(--bg);font:600 10px/16px var(--f-mono);text-align:center}
+.icobtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.al-head .af-wrap{margin-left:auto}
+.al-head{gap:8px}
 </style>
 </head>
 <body>
@@ -571,26 +587,25 @@ button.al-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 <main class="wrap">
   <div class="errbox" id="errBox" hidden></div>
+  <div id="note" hidden></div>
 
 
 
   <div class="boards" id="boards" data-layout="side">
-  <section class="board" id="boardScreener" aria-label="Token screener">
+  <section class="board screener" data-board="mid" aria-label="Midcaps">
   <div class="summary sc-head">
-    <span class="al-title"><span class="al-live" aria-hidden="true"></span>Tokens <span class="sc-count" id="count">Loading…</span></span>
+    <span class="al-title"><span class="al-live" aria-hidden="true"></span>Midcaps <span class="sc-count" data-el="count">Loading…</span></span>
     <div class="controls">
-      <div class="seg" role="radiogroup" aria-label="Timeframe" id="tfSeg">
-        <span class="seg-lbl">Timeframe</span>
+      <div class="seg" role="radiogroup" aria-label="Timeframe" data-el="tfSeg">
         <button role="radio" data-tf="h1" aria-checked="false">1H</button>
         <button role="radio" data-tf="h6" aria-checked="false">6H</button>
         <button role="radio" data-tf="h24" aria-checked="true">24H</button>
       </div>
-      <button class="sc-new" id="newBtn" aria-pressed="false" title="Show the newest tokens first">New</button>
       <div class="fwrap">
-        <button class="btn fbtn" id="filtersBtn" aria-expanded="false" aria-controls="filtersPanel"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2"/></svg>Filters<span class="active-count" id="activeCount"></span></button>
+        <button class="icobtn" data-el="filtersBtn" aria-expanded="false" aria-controls="filtersPanel" title="Midcaps filters" aria-label="Midcaps filters"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2"/></svg><span class="ico-badge" data-el="activeCount"></span></button>
         <div class="fpanel" id="filtersPanel" role="dialog" aria-label="Filters" hidden>
           <div class="fp-head">
-            <span class="fp-title">Filters</span><span class="fp-active" id="fpActive"></span>
+            <span class="fp-title" id="fpTitle">Filters</span><span class="fp-active" id="fpActive"></span>
             <button class="fp-link" id="resetBtn">Reset all</button>
             <button class="fp-x" id="filtersClose" aria-label="Close filters"><svg viewBox="0 0 16 16" width="14" height="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button>
           </div>
@@ -647,39 +662,41 @@ button.al-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
       </div>
     </div>
   </div>
-  <div id="note" hidden></div>
-
-  <select id="sortSel" hidden aria-hidden="true">
-          <option value="vol:-1">Volume</option>
-          <option value="volchg:-1">Volume growth</option>
-          <option value="mcap:-1">Market cap</option>
-          <option value="chg:-1">Market cap gainers</option>
-          <option value="chg:1">Market cap losers</option>
-          <option value="holders:-1">Holders</option>
-          <option value="hchg:-1">Holder growth</option>
-          <option value="age:1">Newest</option>
-          <option value="age:-1">Oldest</option>
-          <option value="name:1">Name (A–Z)</option>
-        </select>
   <div class="tablebox">
     <table>
-      <thead><tr id="thead"></tr></thead>
-      <tbody id="tbody"><tr><td colspan="5" class="empty">Connecting to DexScreener…</td></tr></tbody>
+      <thead><tr data-el="thead"></tr></thead>
+      <tbody data-el="tbody"><tr><td colspan="5" class="empty">Connecting to DexScreener…</td></tr></tbody>
     </table>
-    <div class="loadmore" id="moreBox" hidden><button class="btn" id="moreBtn">Show 100 more</button></div>
-    <nav class="pager" id="pager" aria-label="Token pages"></nav>
+    <nav class="pager" data-el="pager" aria-label="Midcaps pages"></nav>
+  </div>
+  </section>
+  <section class="board screener" data-board="high" aria-label="Highcaps">
+  <div class="summary sc-head">
+    <span class="al-title"><span class="al-live" aria-hidden="true"></span>Highcaps <span class="sc-count" data-el="count">Loading…</span></span>
+    <div class="controls">
+      <div class="seg" role="radiogroup" aria-label="Timeframe" data-el="tfSeg">
+        <button role="radio" data-tf="h1" aria-checked="false">1H</button>
+        <button role="radio" data-tf="h6" aria-checked="false">6H</button>
+        <button role="radio" data-tf="h24" aria-checked="true">24H</button>
+      </div>
+      <div class="fwrap">
+        <button class="icobtn" data-el="filtersBtn" aria-expanded="false" aria-controls="filtersPanel" title="Highcaps filters" aria-label="Highcaps filters"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2"/></svg><span class="ico-badge" data-el="activeCount"></span></button>
+      </div>
+    </div>
+  </div>
+  <div class="tablebox">
+    <table>
+      <thead><tr data-el="thead"></tr></thead>
+      <tbody data-el="tbody"><tr><td colspan="5" class="empty">Connecting to DexScreener…</td></tr></tbody>
+    </table>
+    <nav class="pager" data-el="pager" aria-label="Highcaps pages"></nav>
   </div>
   </section>
   <section class="board" id="boardAlerts" aria-label="Live alerts">
     <div class="al-head">
       <span class="al-title"><span class="al-live" aria-hidden="true"></span>Live alerts <span id="alertsCount"></span></span>
-      <div class="al-tabs" role="group" aria-label="Alert type">
-        <button data-afilter="all" aria-pressed="true">All</button>
-        <button data-afilter="wallets" aria-pressed="false">Wallets</button>
-        <button data-afilter="spikes" aria-pressed="false">Spikes</button>
-      </div>
       <div class="af-wrap">
-        <button class="al-fbtn" id="afBtn" aria-expanded="false" aria-controls="afPanel"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2"/></svg>Filters<span class="af-count" id="afCount"></span></button>
+        <button class="icobtn" id="afBtn" aria-expanded="false" aria-controls="afPanel" title="Alert filters" aria-label="Alert filters"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2"/></svg><span class="ico-badge" id="afCount"></span></button>
         <div class="af-panel" id="afPanel" role="dialog" aria-label="Alert filters" hidden>
           <div class="fp-head"><span class="fp-title">Alert filters</span><span class="fp-active" id="afActive"></span><button class="fp-link" id="afReset">Reset</button><button class="fp-x" id="afClose" aria-label="Close alert filters"><svg viewBox="0 0 16 16" width="14" height="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button></div>
           <div class="fp-body">
@@ -700,7 +717,7 @@ button.al-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
           <div class="fp-foot"><span class="fp-count" id="afMatch"></span><button class="btn primary" id="afDone">Done</button></div>
         </div>
       </div>
-      <button class="al-clear" id="alertsClear">Clear</button>
+      <button class="icobtn" id="alertsClear" title="Clear alerts" aria-label="Clear alerts"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 20L20 4"/></svg></button>
     </div>
     <div class="al-scroll"><table class="al-table">
       <colgroup><col class="c-time"><col class="c-type"><col class="c-who"><col class="c-tok"><col class="c-amt"><col class="c-mc"></colgroup>
@@ -765,7 +782,7 @@ button.al-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         <span class="lbl">Layout</span>
         <button role="menuitemradio" data-layout-mode="side" aria-checked="true"><span class="lay-ico side" aria-hidden="true"><i></i><i></i></span>Side by side</button>
         <button role="menuitemradio" data-layout-mode="stack" aria-checked="false"><span class="lay-ico stack" aria-hidden="true"><i></i><i></i></span>Stacked</button>
-        <button role="menuitemradio" data-layout-mode="screener" aria-checked="false"><span class="lay-ico one" aria-hidden="true"><i></i></span>Screener only</button>
+        <button role="menuitemradio" data-layout-mode="screener" aria-checked="false"><span class="lay-ico side" aria-hidden="true"><i></i><i></i></span>Tokens only</button>
         <button role="menuitemradio" data-layout-mode="alerts" aria-checked="false"><span class="lay-ico one" aria-hidden="true"><i></i></span>Alerts only</button>
         <div class="lay-hr"></div>
         <button id="layoutSwap" aria-pressed="false"><span aria-hidden="true">⇄</span>Swap positions</button>
@@ -863,7 +880,22 @@ const iconOf = new Map();      // mint -> icono del perfil
 let source = 'all', sortKey = 'vol', sortDir = -1, limit = 100, tf = 'h24', page = 0, pageSize = 10;
 const TF_LABEL = { h1:'1h', h6:'6h', h24:'24h' };
 const TF_HOURS = { h1:1, h6:6, h24:24 };
-const F = { q:'', dex:'', lps:new Set(), stages:new Set(), hideNoHolders:false, r:{} };
+const newF = () => ({ q:'', dex:'', lps:new Set(), stages:new Set(), hideNoHolders:false, r:{} });
+let F = newF();
+/* dos tablas de tokens (Midcaps y Highcaps) con la misma lista de tokens; cada una con su orden, periodo, página y filtros.
+   El código de la tabla trabaja con variables globales (sortKey, tf, F…): withBoard() las cambia por las de la tabla indicada. */
+const BOARDS = [['mid','Midcaps'], ['high','Highcaps']].map(([key, title]) => ({ key, title, root: document.querySelector(`[data-board="${key}"]`),
+  sortKey:'vol', sortDir:-1, tf:'h24', page:0, F:newF(), order:[] }));
+let CB = BOARDS[0];
+function saveCtx(){ Object.assign(CB, { sortKey, sortDir, tf, page, F, order }); }
+function loadCtx(b){ CB = b; ({ sortKey, sortDir, tf, page, F, order } = b); }
+function withBoard(b, fn){ if (!b || b === CB) return fn(); const prev = CB; saveCtx(); loadCtx(b); try { return fn(); } finally { saveCtx(); loadCtx(prev); } }
+function forBoards(fn){ for (const b of BOARDS) withBoard(b, fn); }
+const boardOf = el => BOARDS.find(b => b.root.contains(el));
+const boardVal = (b, k) => { if (b === CB) saveCtx(); return b[k]; };
+const allOrder = () => [...new Set(BOARDS.flatMap(b => boardVal(b, 'order')))];
+const boardTfs = () => new Set(BOARDS.map(b => boardVal(b, 'tf')));
+const BOARD_EL = new Set(['count','tfSeg','thead','tbody','pager','filtersBtn','activeCount']);
 const RANGES = [
   ['mcap','Market cap ($)'], ['chg','MC change in timeframe (%)'], ['vol','Volume in timeframe ($)'], ['volchg','Volume change (%)'],
   ['holders','Holders'], ['hchg','Holder change (%)'], ['liq','Liquidity ($)'], ['tx','Txns in timeframe'], ['age','Age (h)'],
@@ -953,7 +985,8 @@ function holdersInfo(r){
 const holdersChange = r => holdersInfo(r).pct;
 
 /* ---------- utilidades ---------- */
-const $ = s => document.querySelector(s);
+// los elementos de cada tabla (#tbody, #pager…) se buscan dentro de la tabla activa
+const $ = s => { const m = /^#([\w-]+)(.*)$/s.exec(s); if (m && BOARD_EL.has(m[1])) return CB.root.querySelector(`[data-el="${m[1]}"]${m[2]}`); return document.querySelector(s); };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1149,7 +1182,7 @@ async function refreshAll(){
     setState('live', failCalls ? `Live (${failCalls} failed requests)` : 'Live');
   }
   render();
-  await loadJupiter(currentRows().slice(0, 300).map(r => r.mint));   // holders de los primeros; el resto se pide al verlos
+  await loadJupiter([...new Set(BOARDS.flatMap(b => withBoard(b, () => currentRows().slice(0, 150).map(r => r.mint))))]);   // holders de los primeros; el resto se pide al verlos
   if (okCalls) snapshot();
   if (firstLoad){ firstLoad = false; resort = true; render(); remountVisibleCharts(); spikeBaseline(); }
   else { render(); detectSpikes(); }
@@ -1222,7 +1255,7 @@ async function addMint(mint){
 const hq = []; const holderPending = new Set(); let hRunning = false, hFails = 0, hDisabled = false;
 function fillHolders(){
   if (hDisabled || jupState !== 'fail') return;   // con Jupiter funcionando no se gasta cuota de GeckoTerminal
-  for (const r of currentRows().slice(0, 60)){
+  for (const r of BOARDS.flatMap(b => withBoard(b, () => currentRows().slice(0, 30)))){
     if (r.jup && r.holders != null && Date.now() - r.jup.at < HOLDER_TTL) continue;   // ya lo da Jupiter
     const c = holderCache[r.mint];
     if ((r.holders != null && c && Date.now() - c[1] < HOLDER_TTL) || holderPending.has(r.mint)) continue;
@@ -1299,16 +1332,15 @@ function currentRows(){
 }
 
 /* ---------- render ---------- */
-function renderHead(){
+function renderHead(){ forBoards(renderHeadBoard); }
+function renderHeadBoard(){
   // cabeceras cortas; el nombre completo sale al pasar el ratón
   const CANDLE_ICON = '<svg class="th-ico" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5v13h13"/><path d="M4 11l3.2-3.6 2.6 2.2L14 4.6"/></svg>';
   const PEOPLE_ICON = '<svg class="th-ico" viewBox="0 0 20 16" width="17" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="7" cy="5" r="2.6"/><path d="M2 14c0-2.8 2.2-4.6 5-4.6s5 1.8 5 4.6"/><circle cx="14" cy="5.6" r="2.1"/><path d="M13.6 9.6c2.6 0 4.4 1.6 4.4 4.1"/></svg>';
   const tfl = `<span class="th-tf">${TF_LABEL[tf]}</span>`;
   const COLS = [['Token','l','name','Token'], [`MC ${tfl}`,'','mcap',`Market cap · change in ${TF_LABEL[tf]}`], [`VOL ${tfl}`,'','vol',`Volume in ${TF_LABEL[tf]} · change`], [`${PEOPLE_ICON} ${tfl}`,'','holders',`Holders · gained or lost in ${TF_LABEL[tf]}`], [`${CANDLE_ICON} ${tfl}`,'',null,`Price chart · ${TF_LABEL[tf]}`]];
-  document.querySelectorAll('#tfSeg button').forEach(b => b.setAttribute('aria-checked', b.dataset.tf === tf));
+  $('#tfSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', b.dataset.tf === tf));
   $('#thead').innerHTML = COLS.map(([t,cls,k,full]) => `<th class="${cls} ${k?'sortable':''}" title="${full}" aria-label="${full}" ${k?`data-k="${k}" tabindex="0"`:''} ${k===sortKey?`aria-sort="${sortDir<0?'descending':'ascending'}"`:''}>${t}</th>`).join('');
-  const sel = $('#sortSel'), v = `${sortKey}:${sortDir}`;
-  if ([...sel.options].some(o => o.value === v)) sel.value = v;
 }
 let rq = 0; function scheduleRender(){ if (!rq) rq = requestAnimationFrame(() => { rq = 0; render(); }); }
 // Las filas se actualizan en su sitio para que los gráficos incrustados no se recarguen en cada actualización.
@@ -1343,7 +1375,8 @@ function tokenCell(r){
   </div>`;
 }
 
-function render(){
+function render(){ forBoards(renderBoard); }
+function renderBoard(){
   const rows = currentRows();
   const total = [...tokens.values()].filter(r => r.pool).length;
   let list;
@@ -1367,7 +1400,7 @@ function render(){
   const cnt = { all: total, profiles:0, boosted:0, cto:0, popular:0, added:0 };
   for (const r of tokens.values()){ if (!r.pool) continue; for (const s of srcs(r.mint)) if (s in cnt) cnt[s]++; }
   for (const k in cnt) { const el = $('#n-'+k); if (el) el.textContent = cnt[k]; }
-  updateFacets();
+  updateFacets(rows.length);
 
   const tb = $('#tbody');
   if (!list.length){
@@ -1438,7 +1471,7 @@ function wantChart(mint){
 function pumpCharts(){
   while (chartActive < CHART_CONC && chartQ.length){
     const j = chartQ.shift();
-    if (j.tf !== tf){ chartPending.delete(j.key); continue; }
+    if (!boardTfs().has(j.tf)){ chartPending.delete(j.key); continue; }
     chartActive++;
     loadCandles(j).finally(() => { chartActive--; chartPending.delete(j.key); pumpCharts(); });
   }
@@ -1466,7 +1499,7 @@ function requestCharts(list){
   }
   vis.forEach(wantChart); rest.slice(0, 60).forEach(wantChart);
 }
-let scrollT; window.addEventListener('scroll', () => { clearTimeout(scrollT); scrollT = setTimeout(() => { const l = order.map(m => tokens.get(m)).filter(Boolean); requestCharts(l); prefetchX(l); }, 120); }, { passive:true });
+let scrollT; window.addEventListener('scroll', () => { clearTimeout(scrollT); scrollT = setTimeout(() => forBoards(() => { const l = order.map(m => tokens.get(m)).filter(Boolean); requestCharts(l); prefetchX(l); }), 120); }, { passive:true });
 
 // rejilla completa: una vela por intervalo; donde no hubo operaciones, raya plana al cierre anterior
 function normalizeCandles(raw, cfg){
@@ -1536,7 +1569,7 @@ function chartCell(r){
 function openChart(){} function closeChart(){}
 
 
-function remountVisibleCharts(){ requestCharts(order.map(m => ({ mint:m }))); }
+function remountVisibleCharts(){ forBoards(() => requestCharts(order.map(m => ({ mint:m })))); }
 
 /* ---------- vista previa de enlaces de X (tweet, perfil, comunidad) ----------
    Datos de fxtwitter (api.fxtwitter.com), que permite consultas desde el navegador. */
@@ -1690,7 +1723,11 @@ function holdCell(i){
   return `<span class="c ${cls}" title="${esc(i.note)}">${i.abs > 0 ? '+' : ''}${int(i.abs)}</span>`;
 }
 
-function updateFacets(){
+function updateFacets(nRows){
+  let n = (F.q?1:0) + (F.dex?1:0) + F.lps.size + F.stages.size + (F.hideNoHolders?1:0);
+  for (const k in F.r) if (F.r[k][0] != null || F.r[k][1] != null) n++;
+  $('#activeCount').textContent = n ? String(n) : '';
+  if (CB !== fpBoard) return;   // el panel de filtros muestra la tabla que lo abrió
   const lpCount = {}, stCount = {}, dexes = {};
   for (const r of tokens.values()){
     if (!r.pool) continue;
@@ -1705,11 +1742,9 @@ function updateFacets(){
   const sel = $('#dexSel');
   const html = '<option value="">All DEXs</option>' + Object.entries(dexes).sort((a,b) => b[1].n - a[1].n).map(([id,d]) => `<option value="${esc(id)}">${esc(d.name)} (${d.n})</option>`).join('');
   if (sel._last !== html){ sel.innerHTML = html; sel.value = F.dex; sel._last = html; }
-  let n = (F.q?1:0) + (F.dex?1:0) + F.lps.size + F.stages.size + (F.hideNoHolders?1:0);
-  for (const k in F.r) if (F.r[k][0] != null || F.r[k][1] != null) n++;
-  $('#activeCount').textContent = n ? String(n) : '';
   $('#fpActive').textContent = n ? `${n} active` : '';
-  $('#fpCount').textContent = `${currentRows().length.toLocaleString('en-US')} tokens match`;
+  $('#fpTitle').textContent = `${CB.title} filters`;
+  $('#fpCount').textContent = `${(nRows ?? currentRows().length).toLocaleString('en-US')} tokens match`;
   document.querySelectorAll('.fp-tf').forEach(el => el.textContent = `· ${TF_LABEL[tf]}`);
 }
 
@@ -1728,39 +1763,39 @@ $('#ranges').innerHTML = RANGE_GROUPS.map(g => `<section class="fp-sec"><h3>${g.
     <div class="fp-in"><span class="u">${unit}</span><input type="text" id="${k}-max" data-r="${k}" data-i="1" placeholder="Max" inputmode="decimal" autocomplete="off"></div>
   </div>`).join('')}</section>`).join('');
 
-let ft; function refilter(){ clearTimeout(ft); ft = setTimeout(() => { limit = 100; page = 0; requestResort(); render(); fillHolders(); saveFilters(); }, 150); }
-$('#ranges').addEventListener('input', e => {
+let ft; function refilter(){ const b = CB; clearTimeout(ft); ft = setTimeout(() => withBoard(b, () => { limit = 100; page = 0; requestResort(); render(); fillHolders(); saveFilters(); }), 150); }
+let fpBoard = BOARDS[0];
+const onFP = fn => (...a) => withBoard(fpBoard, () => fn(...a));
+$('#ranges').addEventListener('input', onFP(e => {
   const el = e.target; if (!el.dataset.r) return;
   const k = el.dataset.r; F.r[k] = F.r[k] || [null,null]; F.r[k][+el.dataset.i] = parseAmt(el.value);
   el.style.borderColor = el.value && parseAmt(el.value) == null ? 'var(--down)' : '';
   refilter();
-});
-$('#q').addEventListener('input', e => { F.q = e.target.value; refilter(); });
+}));
+$('#q').addEventListener('input', onFP(e => { F.q = e.target.value; refilter(); }));
 $('#q').addEventListener('keydown', e => { const v = e.target.value.trim(); if (e.key === 'Enter' && MINT_RE.test(v)) addMint(v); });
-$('#dexSel').addEventListener('change', e => { F.dex = e.target.value; refilter(); });
+$('#dexSel').addEventListener('change', onFP(e => { F.dex = e.target.value; refilter(); }));
 $('#jupKey').value = jupKey;
 $('#jupKey').addEventListener('change', e => { jupKey = e.target.value.trim(); store.set('rs-jupkey', jupKey); jupBase = null; loadJupiter().then(render); });
 document.addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t) return;
-  if (t.dataset.lp){ F.lps.has(t.dataset.lp) ? F.lps.delete(t.dataset.lp) : F.lps.add(t.dataset.lp); refilter(); }
-  else if (t.dataset.stage){ F.stages.has(t.dataset.stage) ? F.stages.delete(t.dataset.stage) : F.stages.add(t.dataset.stage); refilter(); }
+  if (t.dataset.lp){ withBoard(fpBoard, () => { F.lps.has(t.dataset.lp) ? F.lps.delete(t.dataset.lp) : F.lps.add(t.dataset.lp); refilter(); updateFacets(); }); }
+  else if (t.dataset.stage){ withBoard(fpBoard, () => { F.stages.has(t.dataset.stage) ? F.stages.delete(t.dataset.stage) : F.stages.add(t.dataset.stage); refilter(); updateFacets(); }); }
   else if (t.dataset.fav){ const m = t.dataset.fav; favs.has(m) ? favs.delete(m) : favs.add(m); store.set('rs-favs',[...favs]); t.setAttribute('aria-pressed', favs.has(m)); scheduleRender(); }
   else if (t.dataset.copy){ const m = t.dataset.copy;
     (navigator.clipboard?.writeText(m) || Promise.reject()).then(() => toast('CA copied'), () => toast(m)); }
-  else if (t.dataset.preset){ applyPreset(t.dataset.preset); }
+  else if (t.dataset.preset){ withBoard(fpBoard, () => applyPreset(t.dataset.preset)); }
   else if (t.dataset.chart){ openChart(t.dataset.chart); }
   else if (t.id === 'chartClose'){ closeChart(); }
   else if (t.dataset.src){ source = t.dataset.src; document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b === t)); limit = 100; requestResort(); render(); fillHolders(); }
 });
 $('#chartModal').addEventListener('click', e => { if (e.target.id === 'chartModal') closeChart(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#chartModal').hidden) closeChart(); });
-$('#hideNoHolders').addEventListener('click', e => { F.hideNoHolders = !F.hideNoHolders; e.currentTarget.setAttribute('aria-pressed', F.hideNoHolders); refilter(); });
-$('#thead').addEventListener('click', e => sortBy(e.target.closest('th')));
-$('#thead').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); sortBy(e.target.closest('th')); } });
+$('#hideNoHolders').addEventListener('click', onFP(e => { F.hideNoHolders = !F.hideNoHolders; e.currentTarget.setAttribute('aria-pressed', F.hideNoHolders); refilter(); }));
+document.addEventListener('click', e => { const th = e.target.closest('[data-el="thead"] th'); if (th) withBoard(boardOf(th), () => sortBy(th)); });
+document.addEventListener('keydown', e => { const th = e.target.closest?.('[data-el="thead"] th'); if (th && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); withBoard(boardOf(th), () => sortBy(th)); } });
 function sortBy(th){ if (!th?.dataset.k) return; page = 0; const k = th.dataset.k; if (k === sortKey) sortDir *= -1; else { sortKey = k; sortDir = k === 'age' || k === 'name' ? 1 : -1; } renderHead(); requestResort(); render(); fillHolders(); saveFilters(); }
-$('#tfSeg').addEventListener('click', e => { const b = e.target.closest('button[data-tf]'); if (!b) return; tf = b.dataset.tf; page = 0; renderHead(); requestResort(); render(); remountVisibleCharts(); saveFilters(); });
-$('#sortSel').addEventListener('change', e => { const [k, d] = e.target.value.split(':'); sortKey = k; sortDir = +d; renderHead(); requestResort(); render(); fillHolders(); saveFilters(); });
-$('#moreBtn').addEventListener('click', () => { limit += 100; render(); fillHolders(); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-el="tfSeg"] button[data-tf]'); if (!b) return; withBoard(boardOf(b), () => { tf = b.dataset.tf; page = 0; renderHead(); requestResort(); render(); remountVisibleCharts(); saveFilters(); updateFacets(); }); });
 let auto = true;
 /* ---------- actualización en vivo ----------
    · precios, market cap, volumen y cambios de las filas mostradas: cada 4 s (DexScreener permite 300 llamadas/min)
@@ -1770,7 +1805,7 @@ let auto = true;
 let fastBusy = false, holdBusy = false;
 async function fastRefresh(){
   if (!auto || document.hidden || fastBusy || (loading && !restoredFromCache) || firstLoad) return;
-  const mints = order.slice(0, limit); if (!mints.length) return;
+  const mints = allOrder(); if (!mints.length) return;
   fastBusy = true;
   try {
     const batches = []; for (let i = 0; i < mints.length; i += 30) batches.push(mints.slice(i, i + 30));
@@ -1783,9 +1818,9 @@ async function fastRefresh(){
 async function holdersRefresh(){
   if (!auto || document.hidden || holdBusy || loading || firstLoad || jupState !== 'ok') return;
   holdBusy = true;
-  try { await loadJupiter(order.slice(0, 100)); } finally { holdBusy = false; }
+  try { await loadJupiter(allOrder().slice(0, 100)); } finally { holdBusy = false; }
 }
-setInterval(fastRefresh, 4000);
+setInterval(fastRefresh, 3000);
 setInterval(holdersRefresh, 15000);
 // la carga continua la hacen los bucles de descubrimiento de DexScreener (más abajo)
 document.addEventListener('visibilitychange', () => { if (!document.hidden){ fastRefresh(); holdersRefresh(); } });
@@ -1804,29 +1839,41 @@ function applyPreset(p){
   if (p === 'holders'){ setRange('holders', 1000, null); F.hideNoHolders = true; $('#hideNoHolders').setAttribute('aria-pressed', true); $('#hideNoHoldersBox').checked = true; sortKey='holders'; sortDir=-1; }
   renderHead(); refilter();
 }
-$('#resetBtn').addEventListener('click', () => { resetFilters(); refilter(); });
+$('#resetBtn').addEventListener('click', onFP(() => { resetFilters(); refilter(); updateFacets(); }));
 
-function saveFilters(){ store.set('rs-filters-v3', { q:F.q, dex:F.dex, lps:[...F.lps], stages:[...F.stages], h:F.hideNoHolders, r:F.r, sortKey, sortDir, tf }); }
-function loadFilters(){
-  const s = store.get('rs-filters-v3', null); if (!s) return;
+function saveFilters(){ store.set('gt-board-' + CB.key, { q:F.q, dex:F.dex, lps:[...F.lps], stages:[...F.stages], h:F.hideNoHolders, r:F.r, sortKey, sortDir, tf }); }
+function loadFilters(){ forBoards(loadBoardFilters); }
+function loadBoardFilters(){
+  const s = store.get('gt-board-' + CB.key, CB.key === 'mid' ? store.get('rs-filters-v3', null) : null); if (!s) return;
   if (TF_LABEL[s.tf]) tf = s.tf;
-  F.q = s.q||''; $('#q').value = F.q; F.dex = s.dex||''; (s.lps||[]).forEach(x=>F.lps.add(x)); (s.stages||[]).forEach(x=>F.stages.add(x));
-  F.hideNoHolders = !!s.h; $('#hideNoHolders').setAttribute('aria-pressed', F.hideNoHolders);
-  for (const k in (s.r||{})) { const [a,b] = s.r[k]; if ($(`#${k}-min`)) setRange(k, a, b); }
-  if (s.sortKey) { sortKey = s.sortKey; sortDir = s.sortDir || -1; }
+  F.q = s.q||''; F.dex = s.dex||''; (s.lps||[]).forEach(x=>F.lps.add(x)); (s.stages||[]).forEach(x=>F.stages.add(x));
+  F.hideNoHolders = !!s.h;
+  for (const k in (s.r||{})) { const [a,b] = s.r[k] || []; if (RANGES.some(([rk]) => rk === k)) F.r[k] = [a ?? null, b ?? null]; }
+  if (s.sortKey && s.sortKey !== 'fresh') { sortKey = s.sortKey; sortDir = s.sortDir || -1; }
+}
+// pasa los filtros de la tabla activa a las casillas del panel
+function syncFilterUI(){
+  $('#q').value = F.q; $('#dexSel').value = F.dex;
+  $('#hideNoHolders').setAttribute('aria-pressed', F.hideNoHolders); $('#hideNoHoldersBox').checked = F.hideNoHolders;
+  document.querySelectorAll('#ranges input[data-r]').forEach(i => { const v = F.r[i.dataset.r]?.[+i.dataset.i]; i.value = v ?? ''; i.style.borderColor = ''; });
+  updateFacets();
 }
 
 /* panel de filtros */
-function toggleFilters(open){
-  const p = $('#filtersPanel'), b = $('#filtersBtn');
+function toggleFilters(open, board){
+  const p = $('#filtersPanel');
+  if (open !== false && board && board !== fpBoard){   // el panel se mueve a la tabla que lo abre
+    BOARDS.forEach(x => x.root.querySelector('[data-el="filtersBtn"]').setAttribute('aria-expanded', false));
+    fpBoard = board; board.root.querySelector('.fwrap').appendChild(p); p.hidden = true;
+  }
   open = open ?? p.hidden;
-  p.hidden = !open; b.setAttribute('aria-expanded', open);
-  if (open) setTimeout(() => $('#q').focus(), 0);
+  p.hidden = !open; fpBoard.root.querySelector('[data-el="filtersBtn"]').setAttribute('aria-expanded', open);
+  if (open){ withBoard(fpBoard, syncFilterUI); setTimeout(() => $('#q').focus(), 0); }
 }
-$('#filtersBtn').addEventListener('click', e => { e.stopPropagation(); toggleFilters(); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-el="filtersBtn"]'); if (!b) return; e.stopPropagation(); toggleFilters(undefined, boardOf(b)); });
 $('#filtersClose').addEventListener('click', () => toggleFilters(false));
 $('#hideNoHoldersBox').checked = F.hideNoHolders;
-$('#hideNoHoldersBox').addEventListener('change', e => { F.hideNoHolders = e.target.checked; $('#hideNoHolders').setAttribute('aria-pressed', F.hideNoHolders); refilter(); });
+$('#hideNoHoldersBox').addEventListener('change', onFP(e => { F.hideNoHolders = e.target.checked; $('#hideNoHolders').setAttribute('aria-pressed', F.hideNoHolders); refilter(); }));
 $('#filtersDone').addEventListener('click', () => toggleFilters(false));
 
 document.addEventListener('mousedown', e => { if (!$('#filtersPanel').hidden && !e.target.closest('.fwrap')) toggleFilters(false); });
@@ -1895,7 +1942,7 @@ async function tokenMeta(mint){
 let rpcNext = 0, rpcOk = null, rpcFails = 0;
 async function rpc(method, params){
   const now = Date.now(), wait = Math.max(0, rpcNext - now);
-  rpcNext = Math.max(now, rpcNext) + 220;     // ~4-5 llamadas por segundo como máximo
+  rpcNext = Math.max(now, rpcNext) + 150;     // ~6 llamadas por segundo como máximo
   if (wait) await sleep(wait);
   const r = await fetch(RPC, { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ jsonrpc:'2.0', id:1, method, params }) });
   if (r.status === 429){ rpcFails++; await sleep(2000); throw new Error('429'); }
@@ -1936,8 +1983,14 @@ async function handleSignature(sig, address){
   if (seenSigs.has(sig.signature)) return;
   seenSigs.add(sig.signature);
   if (sig.err) return;
-  const tx = await rpc('getTransaction', [sig.signature, { encoding:'jsonParsed', maxSupportedTransactionVersion:1, commitment:'confirmed' }]);
-  if (!tx || tx.meta?.err) return;
+  // recién confirmada, el nodo puede tardar un instante en tener la transacción: se reintenta unas veces
+  let tx = null;
+  for (let i = 0; i < 10 && !tx; i++){
+    if (i) await sleep(i < 4 ? 300 : 800);
+    try { tx = await rpc('getTransaction', [sig.signature, { encoding:'jsonParsed', maxSupportedTransactionVersion:1, commitment:'confirmed' }]); } catch {}
+  }
+  if (!tx){ seenSigs.delete(sig.signature); return; }   // la volverá a intentar el sondeo
+  if (tx.meta?.err) return;
   for (const tr of parseTrade(tx, address)){
     if (tr.usd != null && tr.usd < settings.minTradeUsd) continue;
     const meta = await tokenMeta(tr.mint);
@@ -1966,7 +2019,15 @@ async function walletLoop(){
   try { for (const w of active) { try { await pollWallet(w); } catch {} } }
   finally { walletBusy = false; updateBar(); }
 }
-setInterval(walletLoop, 5000);
+// trades de las wallets casi al instante: se consulta cada wallet en bucle, una vuelta por segundo como mucho
+// (los websockets gratuitos de Solana no avisan desde el navegador, y el nodo público responde en ~50 ms)
+(async function walletPump(){
+  for (;;){
+    const t0 = Date.now();
+    if (!document.hidden) await walletLoop();
+    await sleep(Math.max(document.hidden ? 5000 : 250, 1000 - (Date.now() - t0)));
+  }
+})();
 
 /* ---------- subidas y caídas bruscas ---------- */
 const spikeCooldown = {};    // mint:tipo -> ts
@@ -2115,7 +2176,6 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-open-settings]'); if (b){ openSettings(b.dataset.openSettings); return; }
   const n = e.target.closest('.st-nav button'); if (n){ showSettingsSection(n.dataset.sec); return; }
   const d = e.target.closest('[data-wdel]'); if (d){ wallets.splice(+d.dataset.wdel, 1); saveWallets(); renderWallets(); updateBar(); renderAlerts(); return; }
-  const f = e.target.closest('[data-afilter]'); if (f){ alertFilter = f.dataset.afilter; document.querySelectorAll('[data-afilter]').forEach(x => x.setAttribute('aria-pressed', x === f)); renderAlerts(); return; }
 });
 document.addEventListener('change', e => {
   const t = e.target;
@@ -2152,14 +2212,15 @@ function updateBar(){
 }
 setInterval(updateBar, 1000);
 
-const LAYOUTS = { side:'Side by side', stack:'Stacked', screener:'Screener only', alerts:'Alerts only' };
+const LAYOUTS = { side:'Side by side', stack:'Stacked', screener:'Tokens only', alerts:'Alerts only' };
 const layout = Object.assign({ mode:'side', swap:false }, store.get('gt-layout', {}));
 function applyLayout(){
   const b = $('#boards');
   b.dataset.layout = layout.mode; b.classList.toggle('swap', !!layout.swap);
   document.querySelectorAll('[data-layout-mode]').forEach(x => x.setAttribute('aria-checked', x.dataset.layoutMode === layout.mode));
   $('#layoutSwap').setAttribute('aria-pressed', !!layout.swap);
-  $('#layoutSwap').disabled = layout.mode === 'screener' || layout.mode === 'alerts';
+  $('#layoutSwap').disabled = layout.mode === 'alerts';
+  setTimeout(setPageSize, 50);
   store.set('gt-layout', layout);
 }
 $('#layoutBtn').addEventListener('click', e => { e.stopPropagation(); const m = $('#layoutMenu'); m.hidden = !m.hidden; $('#layoutBtn').setAttribute('aria-expanded', !m.hidden); });
@@ -2271,8 +2332,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#afPan
 /* ---------- páginas de la tabla de tokens ---------- */
 // filas por página según el alto de la ventana, para que la página no tenga que hacer scroll
 function computePageSize(){
-  const box = document.querySelector('#boardScreener .tablebox');
-  const row = document.querySelector('#tbody tr[data-mint]');
+  const vis = BOARDS.map(b => b.root).find(el => el.offsetParent) || BOARDS[0].root;
+  const box = vis.querySelector('.tablebox');
+  const row = vis.querySelector('tbody tr[data-mint]');
   const rowH = row ? row.getBoundingClientRect().height : 80;
   const top = box ? box.getBoundingClientRect().top + window.scrollY : 200;
   const reserved = 32 /* cabecera tabla */ + 52 /* paginador */ + 40 /* barra inferior */ + 12;
@@ -2294,13 +2356,19 @@ function renderPager(totalRows){
     <div class="pg-btns"><button class="pg-arrow" data-page="${page - 1}" ${page === 0 ? 'disabled' : ''} aria-label="Previous page">‹</button>${nums.join('')}<button class="pg-arrow" data-page="${page + 1}" ${page >= pages - 1 ? 'disabled' : ''} aria-label="Next page">›</button></div>`;
 }
 document.addEventListener('click', e => {
-  const b = e.target.closest('#pager [data-page]'); if (!b || b.disabled) return;
-  page = Math.max(0, +b.dataset.page); render(); fillHolders();
+  const b = e.target.closest('[data-el="pager"] [data-page]'); if (!b || b.disabled) return;
+  withBoard(boardOf(b), () => { page = Math.max(0, +b.dataset.page); renderBoard(); });
+  fillHolders();
 });
+// flechas del teclado: pasan página en la tabla que tiene el ratón encima
+let hoverBoard = BOARDS[0];
+document.addEventListener('pointerover', e => { const b = e.target.closest?.('.screener'); if (b) hoverBoard = boardOf(b); });
 document.addEventListener('keydown', e => {
   if (e.target.closest('input,textarea,select') || !$('#settingsPage').hidden) return;
-  if (e.key === 'ArrowRight'){ const n = $('#pager .pg-arrow:last-child'); if (n && !n.disabled) n.click(); }
-  if (e.key === 'ArrowLeft'){ const p = $('#pager .pg-arrow:first-child'); if (p && !p.disabled) p.click(); }
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  const b = hoverBoard.root.offsetParent ? hoverBoard : BOARDS.find(x => x.root.offsetParent); if (!b) return;
+  const btn = b.root.querySelector(`[data-el="pager"] .pg-arrow:${e.key === 'ArrowRight' ? 'last' : 'first'}-child`);
+  if (btn && !btn.disabled) btn.click();
 });
 let psT; window.addEventListener('resize', () => { clearTimeout(psT); psT = setTimeout(setPageSize, 150); });
 setTimeout(setPageSize, 300); setTimeout(setPageSize, 2500);
@@ -2341,7 +2409,7 @@ async function dsCall(path){
 }
 function liveRender(){   // como mucho un repintado por segundo mientras llegan datos
   if (liveT) return;
-  liveT = setTimeout(() => { liveT = 0; if (!firstLoad) { render(); } }, 500);
+  liveT = setTimeout(() => { liveT = 0; if (!firstLoad) { render(); detectSpikes(); } }, 500);
 }
 // Los perfiles, boosts, takeovers y anuncios tienen su propio límite (60/min por endpoint) aparte del de 300/min,
 // así que cada uno se consulta en su propio bucle, lo más rápido que permite su límite.
@@ -2411,16 +2479,6 @@ function pruneTokens(){
 setInterval(() => { if (!firstLoad) snapshot(); }, 60000);
 // arrancan después de la primera carga
 (function startLoops(){ if (firstLoad) return setTimeout(startLoops, 500); listsLoop(); metasLoop(); searchLoop(); sweepLoop(); })();
-
-/* botón New: los tokens más nuevos (DEX recién pagado o recién creados) arriba */
-let prevSort = null;
-function syncNewBtn(){ $('#newBtn').setAttribute('aria-pressed', sortKey === 'fresh'); }
-$('#newBtn').addEventListener('click', () => {
-  if (sortKey === 'fresh'){ [sortKey, sortDir] = prevSort || ['vol', -1]; }
-  else { prevSort = [sortKey, sortDir]; sortKey = 'fresh'; sortDir = -1; }
-  page = 0; renderHead(); requestResort(); render(); saveFilters(); syncNewBtn();
-});
-syncNewBtn();
 
 /* ---------- PumpPortal en vivo: cada token nuevo de Pump.fun entra en cuanto DexScreener lo lista ---------- */
 const pumpPending = new Map();   // mint -> cuándo lo anunció PumpPortal
