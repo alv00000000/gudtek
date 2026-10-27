@@ -102,7 +102,7 @@ function derive(mint){
     site: info.websites?.[0]?.url || prev.site || '', sites: (info.websites || []).map(w => w.url).filter(Boolean),
     x: (info.socials || []).find(s => s.type === 'twitter')?.url || prev.x || '',
     xAll: [...new Set(ps.flatMap(p => (p.info?.socials || []).filter(s => s.type === 'twitter' || s.type === 'x').map(s => s.url)).filter(Boolean))],
-    paid: prev.paid || !!ps.find(p => p.info),
+    paid: prev.paid || paidSeen.has(mint) || !!ps.find(p => p.info),
     seen: Date.now(),
   };
   rows.set(mint, row);
@@ -114,10 +114,24 @@ const enqueue = m => { if (!queued.has(m)) { queued.add(m); queue.push(m); } };
 let calls = 0, newTokens = 0;
 const before = new Set(rows.keys());
 
-// 1) listas: perfiles (DEX pagado), actualizados, boosts, takeovers, anuncios
-for (const path of ['/token-profiles/latest/v1','/token-profiles/recent-updates/v1','/token-boosts/latest/v1','/token-boosts/top/v1','/community-takeovers/latest/v1','/ads/latest/v1']){
-  try { for (const it of await dsList(path)) if (it.chainId === 'solana' && it.tokenAddress) { enqueue(it.tokenAddress); if (path.includes('profiles')) (rows.get(it.tokenAddress) || {}).paid = true; } } catch (e) { console.log(e.message); }
+// 1) listas: perfiles (DEX pagado), actualizados, boosts, takeovers, anuncios.
+//    DexScreener solo devuelve los 30 últimos de cada lista, así que se consultan sin parar durante toda la pasada
+//    (cada una a su ritmo, por debajo de su límite de 60/min) para no perder ningún DEX pagado.
+const LISTS = { '/token-profiles/latest/v1':1500, '/token-profiles/recent-updates/v1':3000, '/token-boosts/latest/v1':3000, '/token-boosts/top/v1':15000, '/community-takeovers/latest/v1':6000, '/ads/latest/v1':6000 };
+const paidSeen = new Set();
+async function readList(path){
+  try {
+    for (const it of await dsList(path)){
+      if (it.chainId !== 'solana' || !it.tokenAddress) continue;
+      const m = it.tokenAddress;
+      if (path.includes('profiles')) { paidSeen.add(m); if (rows.has(m)) rows.get(m).paid = true; }
+      if (!rows.has(m)) { if (!queued.has(m)) { queued.add(m); queue.unshift(m); } }   // los nuevos, los primeros de la cola
+    }
+  } catch (e) { console.log(path, e.message); }
 }
+const listLoops = Object.entries(LISTS).map(async ([path, every]) => {
+  while (timeLeft() > 30000){ const t = Date.now(); await readList(path); await sleep(Math.max(0, every - (Date.now() - t))); }
+});
 // 2) metas en tendencia, con sus pares
 try {
   for (const m of await dsList('/metas/trending/v1')){
@@ -159,6 +173,9 @@ while (timeLeft() > 25000){
   for (const m of pairsOf.keys()) { derive(m); if (!before.has(m)) { before.add(m); newTokens++; } }
   pairsOf.clear();
 }
+
+await Promise.all(listLoops);
+console.log('DEX pagados vistos en esta pasada:', paidSeen.size);
 
 // 5) holders y launchpad desde Jupiter para los tokens con más volumen (100 por llamada)
 try {
