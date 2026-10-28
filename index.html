@@ -308,34 +308,25 @@ body.noscroll{overflow:hidden}
 body{padding-bottom:56px}
 
 /* ---------- tableros (screener + alertas) ---------- */
-.boards{display:grid;gap:16px;align-items:start;justify-content:center;grid-auto-flow:row dense}
-.boards[data-layout="side"]{grid-template-columns:repeat(3, minmax(0,580px))}
-.boards[data-layout="side"].swap #boardAlerts{order:-1}
-.boards[data-layout="stack"]{grid-template-columns:minmax(0,580px)}
-.boards[data-layout="stack"].swap #boardAlerts{order:-1}
-.boards[data-layout="screener"]{grid-template-columns:repeat(2, minmax(0,580px))}
-.boards[data-layout="screener"] #boardAlerts{display:none}
-.boards[data-layout="screener"].swap [data-board="high"]{order:-1}
-.boards[data-layout="alerts"]{grid-template-columns:minmax(0,580px)}
-.boards[data-layout="alerts"] .screener{display:none}
+.boards{display:grid;gap:16px;align-items:start;justify-content:center;grid-template-columns:minmax(0,1162px) minmax(0,580px)}
+.boards .lanes{grid-column:1;display:flex;flex-direction:column;gap:16px;min-width:0}
+.boards #boardAlerts{grid-column:2}
+.boards.swap{grid-template-columns:minmax(0,580px) minmax(0,1162px)}
+.boards.swap .lanes{grid-column:2} .boards.swap #boardAlerts{grid-column:1;grid-row:1}
+.boards.nowallets{grid-template-columns:minmax(0,1162px)} .boards.nowallets #boardAlerts{display:none} .boards.nowallets .lanes{grid-column:1}
+.boards[data-layout="mid"] .lane[data-board="high"], .boards[data-layout="high"] .lane[data-board="mid"]{display:none}
+@media (max-width:1790px){
+  .boards, .boards.swap{grid-template-columns:minmax(0,1162px)}
+  .boards .lanes, .boards.swap .lanes, .boards #boardAlerts, .boards.swap #boardAlerts{grid-column:1;grid-row:auto}
+  .boards #boardAlerts{position:static!important;max-height:560px!important}
+}
 .board{min-width:0;display:flex;flex-direction:column;gap:16px}
 /* pantallas medianas: las dos tablas de tokens una encima de otra y las alertas al lado */
-@media (max-width:1830px){
-  .boards[data-layout="side"]{grid-template-columns:repeat(2, minmax(0,580px))}
-  .boards[data-layout="side"] .screener{grid-column:1}
-  .boards[data-layout="side"] #boardAlerts{grid-column:2;grid-row:1 / span 2}
-  .boards[data-layout="side"].swap .screener{grid-column:2}
-  .boards[data-layout="side"].swap #boardAlerts{grid-column:1}
-}
-@media (max-width:1230px){
-  .boards[data-layout="side"], .boards[data-layout="screener"]{grid-template-columns:minmax(0,580px)}
-  .boards[data-layout="side"] .screener, .boards[data-layout="side"] #boardAlerts, .boards[data-layout="side"].swap .screener, .boards[data-layout="side"].swap #boardAlerts{grid-column:auto;grid-row:auto}
-  .boards[data-layout="side"] #boardAlerts{position:static;max-height:70vh}
-}
+
 
 /* ---------- panel de alertas ---------- */
 #boardAlerts{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;gap:0}
-.boards[data-layout="side"] #boardAlerts{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);max-height:calc(100vh - 150px)}
+.boards #boardAlerts{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);max-height:calc(100vh - 150px)}
 .al-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .al-title{font:700 14px var(--f-display);display:flex;align-items:center;gap:8px}
 .al-live{width:8px;height:8px;border-radius:50%;background:var(--up);box-shadow:0 0 0 3px color-mix(in srgb, var(--up) 25%, transparent);animation:pulse 1.6s ease-in-out infinite}
@@ -507,22 +498,21 @@ td.al-mc{display:table-cell;margin:0;color:var(--muted);font:500 14px var(--f-bo
 #boardAlerts .al-scroll{border-radius:0 0 12px 12px}
 
 /* screener con el mismo diseño que Live alerts */
-.screener{background:var(--panel);border:1px solid var(--line);border-radius:12px;gap:0}
 .screener .sc-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);margin:0;flex-wrap:wrap;justify-content:flex-start}
 .screener .sc-head .controls{margin-left:auto;gap:6px}
 .sc-count{font:500 11px var(--f-mono);color:var(--muted)}
 .sc-of{opacity:.7}
-.screener .seg{background:none;border:0;padding:0;gap:4px}
-.screener .seg-lbl{display:none}
-.screener .seg button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;font:500 12px var(--f-body)}
-.screener .seg button[aria-checked="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.lane-head .seg{background:none;border:0;padding:0;gap:4px}
+.lane-head .seg-lbl{display:none}
+.lane-head .seg button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;font:500 12px var(--f-body)}
+.lane-head .seg button[aria-checked="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .screener .tablebox{border:0;border-radius:0 0 12px 12px;background:transparent}
 .screener thead th{background:var(--panel-2);font:500 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 14px;border-bottom:1px solid var(--line)}
 .screener thead th:first-child{padding-left:14px}
 .screener .th-tf{border:0;padding:0;margin-left:5px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);opacity:.65}
 
 /* misma altura de cabeceras en los dos paneles */
-.al-head, .screener .sc-head{min-height:54px;box-sizing:border-box}
+.al-head, .lane-head{min-height:54px;box-sizing:border-box}
 .al-table thead th, .screener thead th{height:32px;line-height:1;vertical-align:middle;box-sizing:border-box}
 .screener thead .th-ico{width:13px;height:13px;vertical-align:-2px}
 
@@ -577,6 +567,37 @@ button.al-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .al-src{flex:none;font:700 9px/1 var(--f-mono);letter-spacing:.05em;padding:3px 5px;border-radius:4px;border:1px solid var(--line);color:var(--muted);margin-right:6px}
 a.al-trader{text-decoration:none;color:var(--muted)}
 a.al-trader:hover{color:var(--fg)}
+
+/* ---------- carriles: Midcaps y Highcaps (tokens + trades en vivo con los mismos filtros) ---------- */
+.lane{background:var(--panel);border:1px solid var(--line);border-radius:14px;min-width:0}
+.lane-head{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);border-radius:14px 14px 0 0;background:var(--panel)}
+.lane-title{margin:0;display:flex;align-items:center;gap:10px;font:700 16px var(--f-display);letter-spacing:-.01em}
+.lane-tag{font:700 10px/1 var(--f-mono);letter-spacing:.08em;padding:5px 7px;border-radius:6px;background:var(--fg);color:var(--bg)}
+.lane-tag.high{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 1.5px var(--fg)}
+.lane-ctl{margin-left:auto;display:flex;align-items:center;gap:8px}
+.lane-ctl .seg{display:flex}
+.lane-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.lane-col{min-width:0;display:flex;flex-direction:column}
+.lane-col.trades{position:relative;border-left:1px solid var(--line);min-height:360px}
+.tr-wrap{position:absolute;inset:0;display:flex;flex-direction:column;min-height:0}
+.tr-wrap .al-scroll{flex:1;min-height:0;overflow:auto;border-radius:0 0 14px 0}
+.col-head{display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-bottom:1px solid var(--line);box-sizing:border-box;flex:none}
+.col-title{font:600 13px var(--f-body);display:flex;align-items:center;gap:8px}
+.col-head .icobtn{margin-left:auto}
+.icobtn.sm{width:26px;height:26px}
+.icobtn.sm svg{width:14px;height:14px}
+.screener .tablebox{border-radius:0 0 0 14px}
+.tr-table thead th{position:sticky;top:0;z-index:1}
+.tr-table td{padding:7px 10px}
+.al-trader{font:12px var(--f-mono)}
+.al-empty .hint2{display:block;margin-top:4px;font-size:12px;opacity:.8}
+.fp-trades .fp-range{margin-top:10px}
+@media (max-width:1230px){
+  .lane-body{grid-template-columns:minmax(0,1fr)}
+  .lane-col.trades{border-left:0;border-top:1px solid var(--line);height:440px}
+  .screener .tablebox{border-radius:0}
+}
+@media (max-width:640px){ .lane-head{flex-wrap:wrap} .lane-ctl{margin-left:0;width:100%} }
 </style>
 </head>
 <body>
@@ -595,17 +616,18 @@ a.al-trader:hover{color:var(--fg)}
 
 
   <div class="boards" id="boards" data-layout="side">
-  <section class="board screener" data-board="mid" aria-label="Midcaps">
-  <div class="summary sc-head">
-    <span class="al-title"><span class="al-live" aria-hidden="true"></span>Midcaps <span class="sc-count" data-el="count">Loading…</span></span>
-    <div class="controls">
-      <div class="seg" role="radiogroup" aria-label="Timeframe" data-el="tfSeg">
-        <button role="radio" data-tf="h1" aria-checked="false">1H</button>
-        <button role="radio" data-tf="h6" aria-checked="false">6H</button>
-        <button role="radio" data-tf="h24" aria-checked="true">24H</button>
-      </div>
-      <div class="fwrap">
-        <button class="icobtn" data-el="filtersBtn" aria-expanded="false" aria-controls="filtersPanel" title="Midcaps filters" aria-label="Midcaps filters"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2"/></svg><span class="ico-badge" data-el="activeCount"></span></button>
+  <div class="lanes">
+  <section class="lane" data-board="mid" aria-label="Midcaps">
+    <header class="lane-head">
+      <h2 class="lane-title"><span class="lane-tag mid">MID</span>Midcaps</h2>
+      <div class="lane-ctl">
+        <div class="seg" role="radiogroup" aria-label="Midcaps timeframe" data-el="tfSeg">
+          <button role="radio" data-tf="h1" aria-checked="false">1H</button>
+          <button role="radio" data-tf="h6" aria-checked="false">6H</button>
+          <button role="radio" data-tf="h24" aria-checked="true">24H</button>
+        </div>
+        <div class="fwrap">
+          <button class="icobtn" data-el="filtersBtn" aria-expanded="false" aria-controls="filtersPanel" title="Midcaps filters (tokens and live trades)" aria-label="Midcaps filters"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2"/></svg><span class="ico-badge" data-el="activeCount"></span></button>
         <div class="fpanel" id="filtersPanel" role="dialog" aria-label="Filters" hidden>
           <div class="fp-head">
             <span class="fp-title" id="fpTitle">Filters</span><span class="fp-active" id="fpActive"></span>
@@ -644,6 +666,12 @@ a.al-trader:hover{color:var(--fg)}
               </section>
             </div>
 
+            <section class="fp-sec fp-trades">
+              <h3>Live trades</h3>
+              <div class="fp-chips"><button class="chip" data-tt="buy">Buys</button><button class="chip" data-tt="sell">Sells</button></div>
+              <div class="fp-range"><label for="tmin">Min trade size</label><div class="fp-in"><span class="u">◎</span><input type="text" id="tmin" placeholder="0" inputmode="decimal" autocomplete="off"></div><span></span></div>
+            </section>
+
             <div id="ranges" class="fp-ranges"></div>
             <p class="fp-hint">Type amounts like 50k, 1.5m or 2b. Leave a box empty for no limit.</p>
 
@@ -662,58 +690,84 @@ a.al-trader:hover{color:var(--fg)}
             <button class="btn primary" id="filtersDone">Show results</button>
           </div>
         </div>
+        </div>
+      </div>
+    </header>
+    <div class="lane-body">
+      <div class="lane-col screener">
+        <div class="col-head"><span class="col-title">Tokens</span><span class="sc-count" data-el="count">Loading…</span></div>
+        <div class="tablebox">
+          <table>
+            <thead><tr data-el="thead"></tr></thead>
+            <tbody data-el="tbody"><tr><td colspan="5" class="empty">Connecting to DexScreener…</td></tr></tbody>
+          </table>
+          <nav class="pager" data-el="pager" aria-label="Midcaps token pages"></nav>
+        </div>
+      </div>
+      <div class="lane-col trades">
+        <div class="tr-wrap">
+          <div class="col-head"><span class="col-title"><span class="al-live" aria-hidden="true"></span>Live trades</span><span class="sc-count" data-el="trCount"></span>
+            <button class="icobtn sm" data-el="trClear" title="Clear Midcaps trades" aria-label="Clear Midcaps trades"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 20L20 4"/></svg></button></div>
+          <div class="al-scroll"><table class="al-table tr-table">
+            <colgroup><col class="c-time"><col class="c-type"><col class="c-who"><col class="c-tok"><col class="c-amt"><col class="c-mc"></colgroup>
+            <thead><tr><th>Time</th><th>Type</th><th>Trader</th><th>Token</th><th class="r">Amount</th><th class="r">MC</th></tr></thead>
+            <tbody data-el="trBody"></tbody></table></div>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="tablebox">
-    <table>
-      <thead><tr data-el="thead"></tr></thead>
-      <tbody data-el="tbody"><tr><td colspan="5" class="empty">Connecting to DexScreener…</td></tr></tbody>
-    </table>
-    <nav class="pager" data-el="pager" aria-label="Midcaps pages"></nav>
-  </div>
   </section>
-  <section class="board screener" data-board="high" aria-label="Highcaps">
-  <div class="summary sc-head">
-    <span class="al-title"><span class="al-live" aria-hidden="true"></span>Highcaps <span class="sc-count" data-el="count">Loading…</span></span>
-    <div class="controls">
-      <div class="seg" role="radiogroup" aria-label="Timeframe" data-el="tfSeg">
-        <button role="radio" data-tf="h1" aria-checked="false">1H</button>
-        <button role="radio" data-tf="h6" aria-checked="false">6H</button>
-        <button role="radio" data-tf="h24" aria-checked="true">24H</button>
+  <section class="lane" data-board="high" aria-label="Highcaps">
+    <header class="lane-head">
+      <h2 class="lane-title"><span class="lane-tag high">HIGH</span>Highcaps</h2>
+      <div class="lane-ctl">
+        <div class="seg" role="radiogroup" aria-label="Highcaps timeframe" data-el="tfSeg">
+          <button role="radio" data-tf="h1" aria-checked="false">1H</button>
+          <button role="radio" data-tf="h6" aria-checked="false">6H</button>
+          <button role="radio" data-tf="h24" aria-checked="true">24H</button>
+        </div>
+        <div class="fwrap">
+          <button class="icobtn" data-el="filtersBtn" aria-expanded="false" aria-controls="filtersPanel" title="Highcaps filters (tokens and live trades)" aria-label="Highcaps filters"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2"/></svg><span class="ico-badge" data-el="activeCount"></span></button>
+        </div>
       </div>
-      <div class="fwrap">
-        <button class="icobtn" data-el="filtersBtn" aria-expanded="false" aria-controls="filtersPanel" title="Highcaps filters" aria-label="Highcaps filters"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2"/></svg><span class="ico-badge" data-el="activeCount"></span></button>
+    </header>
+    <div class="lane-body">
+      <div class="lane-col screener">
+        <div class="col-head"><span class="col-title">Tokens</span><span class="sc-count" data-el="count">Loading…</span></div>
+        <div class="tablebox">
+          <table>
+            <thead><tr data-el="thead"></tr></thead>
+            <tbody data-el="tbody"><tr><td colspan="5" class="empty">Connecting to DexScreener…</td></tr></tbody>
+          </table>
+          <nav class="pager" data-el="pager" aria-label="Highcaps token pages"></nav>
+        </div>
+      </div>
+      <div class="lane-col trades">
+        <div class="tr-wrap">
+          <div class="col-head"><span class="col-title"><span class="al-live" aria-hidden="true"></span>Live trades</span><span class="sc-count" data-el="trCount"></span>
+            <button class="icobtn sm" data-el="trClear" title="Clear Highcaps trades" aria-label="Clear Highcaps trades"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 20L20 4"/></svg></button></div>
+          <div class="al-scroll"><table class="al-table tr-table">
+            <colgroup><col class="c-time"><col class="c-type"><col class="c-who"><col class="c-tok"><col class="c-amt"><col class="c-mc"></colgroup>
+            <thead><tr><th>Time</th><th>Type</th><th>Trader</th><th>Token</th><th class="r">Amount</th><th class="r">MC</th></tr></thead>
+            <tbody data-el="trBody"></tbody></table></div>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="tablebox">
-    <table>
-      <thead><tr data-el="thead"></tr></thead>
-      <tbody data-el="tbody"><tr><td colspan="5" class="empty">Connecting to DexScreener…</td></tr></tbody>
-    </table>
-    <nav class="pager" data-el="pager" aria-label="Highcaps pages"></nav>
-  </div>
   </section>
+  </div>
   <section class="board" id="boardAlerts" aria-label="Live alerts">
     <div class="al-head">
-      <span class="al-title"><span class="al-live" aria-hidden="true"></span>Live alerts <span id="alertsCount"></span></span>
+      <span class="al-title"><span class="al-live" aria-hidden="true"></span>Wallet alerts <span id="alertsCount"></span></span>
       <div class="af-wrap">
         <button class="icobtn" id="afBtn" aria-expanded="false" aria-controls="afPanel" title="Alert filters" aria-label="Alert filters"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2"/></svg><span class="ico-badge" id="afCount"></span></button>
         <div class="af-panel" id="afPanel" role="dialog" aria-label="Alert filters" hidden>
           <div class="fp-head"><span class="fp-title">Alert filters</span><span class="fp-active" id="afActive"></span><button class="fp-link" id="afReset">Reset</button><button class="fp-x" id="afClose" aria-label="Close alert filters"><svg viewBox="0 0 16 16" width="14" height="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button></div>
           <div class="fp-body">
             <div class="fp-search"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.5 10.5L14 14"/></svg><input type="text" id="afQ" placeholder="Search token" autocomplete="off" aria-label="Search token"></div>
-            <section class="fp-sec"><h3>Show</h3><div class="fp-chips" id="afSrcs">
-              <button class="chip" data-afs="wallets">My wallets</button><button class="chip" data-afs="mid">Midcaps trades</button><button class="chip" data-afs="high">Highcaps trades</button>
-            </div>
-            <p class="fp-hint" style="margin:0">Midcaps and Highcaps trades follow the filters of each token list.</p></section>
             <section class="fp-sec"><h3>Type</h3><div class="fp-chips" id="afTypes">
               <button class="chip" data-aft="buy">Buy</button><button class="chip" data-aft="sell">Sell</button><button class="chip" data-aft="all">Sold all</button><button class="chip" data-aft="pump">Pump</button><button class="chip" data-aft="dump">Dump</button>
             </div></section>
             <section class="fp-sec"><h3>Wallets <span class="fp-tf">· none selected = all</span></h3><div class="fp-chips" id="afWallets"></div></section>
             <section class="fp-sec"><h3>Trade size</h3>
-              <div class="fp-range"><label for="afListMin">List trades from</label><div class="fp-in"><span class="u">◎</span><input type="text" id="afListMin" placeholder="0.5" inputmode="decimal" autocomplete="off"></div><span></span></div>
               <div class="fp-range"><label for="afMinSol">Min amount</label><div class="fp-in"><span class="u">◎</span><input type="text" id="afMinSol" placeholder="Min" inputmode="decimal" autocomplete="off"></div><div class="fp-in"><span class="u">◎</span><input type="text" id="afMaxSol" placeholder="Max" inputmode="decimal" autocomplete="off"></div></div>
             </section>
             <section class="fp-sec"><h3>Token</h3>
@@ -787,13 +841,13 @@ a.al-trader:hover{color:var(--fg)}
     <div class="bar-right">
       <button class="bar-btn" id="layoutBtn" aria-expanded="false" aria-controls="layoutMenu"><span class="lay-ico side" aria-hidden="true"><i></i><i></i></span>Layout</button>
       <div class="lay-menu" id="layoutMenu" role="menu" hidden>
-        <span class="lbl">Layout</span>
-        <button role="menuitemradio" data-layout-mode="side" aria-checked="true"><span class="lay-ico side" aria-hidden="true"><i></i><i></i></span>Side by side</button>
-        <button role="menuitemradio" data-layout-mode="stack" aria-checked="false"><span class="lay-ico stack" aria-hidden="true"><i></i><i></i></span>Stacked</button>
-        <button role="menuitemradio" data-layout-mode="screener" aria-checked="false"><span class="lay-ico side" aria-hidden="true"><i></i><i></i></span>Tokens only</button>
-        <button role="menuitemradio" data-layout-mode="alerts" aria-checked="false"><span class="lay-ico one" aria-hidden="true"><i></i></span>Alerts only</button>
+        <span class="lbl">Show</span>
+        <button role="menuitemradio" data-layout-mode="both" aria-checked="true"><span class="lay-ico stack" aria-hidden="true"><i></i><i></i></span>Midcaps and Highcaps</button>
+        <button role="menuitemradio" data-layout-mode="mid" aria-checked="false"><span class="lay-ico one" aria-hidden="true"><i></i></span>Midcaps only</button>
+        <button role="menuitemradio" data-layout-mode="high" aria-checked="false"><span class="lay-ico one" aria-hidden="true"><i></i></span>Highcaps only</button>
         <div class="lay-hr"></div>
-        <button id="layoutSwap" aria-pressed="false"><span aria-hidden="true">⇄</span>Swap positions</button>
+        <button id="layoutWallets" aria-pressed="true"><span aria-hidden="true">👛</span>Wallet alerts panel</button>
+        <button id="layoutSwap" aria-pressed="false"><span aria-hidden="true">⇄</span>Wallet alerts on the left</button>
       </div>
     </div>
   </div>
@@ -888,7 +942,7 @@ const iconOf = new Map();      // mint -> icono del perfil
 let source = 'all', sortKey = 'vol', sortDir = -1, limit = 100, tf = 'h24', page = 0, pageSize = 10;
 const TF_LABEL = { h1:'1h', h6:'6h', h24:'24h' };
 const TF_HOURS = { h1:1, h6:6, h24:24 };
-const newF = () => ({ q:'', dex:'', lps:new Set(), stages:new Set(), hideNoHolders:false, r:{} });
+const newF = () => ({ q:'', dex:'', lps:new Set(), stages:new Set(), hideNoHolders:false, r:{}, tmin:0.5, ttypes:['buy','sell'] });
 let F = newF();
 /* dos tablas de tokens (Midcaps y Highcaps) con la misma lista de tokens; cada una con su orden, periodo, página y filtros.
    El código de la tabla trabaja con variables globales (sortKey, tf, F…): withBoard() las cambia por las de la tabla indicada. */
@@ -903,7 +957,7 @@ const boardOf = el => BOARDS.find(b => b.root.contains(el));
 const boardVal = (b, k) => { if (b === CB) saveCtx(); return b[k]; };
 const allOrder = () => [...new Set(BOARDS.flatMap(b => boardVal(b, 'order')))];
 const boardTfs = () => new Set(BOARDS.map(b => boardVal(b, 'tf')));
-const BOARD_EL = new Set(['count','tfSeg','thead','tbody','pager','filtersBtn','activeCount']);
+const BOARD_EL = new Set(['count','tfSeg','thead','tbody','pager','filtersBtn','activeCount','trBody','trCount','trClear']);
 const RANGES = [
   ['mcap','Market cap ($)'], ['chg','MC change in timeframe (%)'], ['vol','Volume in timeframe ($)'], ['volchg','Volume change (%)'],
   ['holders','Holders'], ['hchg','Holder change (%)'], ['liq','Liquidity ($)'], ['tx','Txns in timeframe'], ['age','Age (h)'], ['fees','Global fees (SOL)'],
@@ -1395,7 +1449,8 @@ function tokenCell(r){
 function render(){ forBoards(renderBoard); }
 function renderBoard(){
   const rows = currentRows();
-  CB.pass = new Set(rows.map(r => r.mint));   // tokens que pasan los filtros de esta tabla (las alertas los usan)
+  CB.pass = new Set(rows.map(r => r.mint));   // tokens que pasan los filtros de esta lista (sus trades en vivo los usan)
+  renderTradesBoard();
   const total = [...tokens.values()].filter(r => r.pool).length;
   let list;
   const pages = Math.max(1, Math.ceil(rows.length / pageSize));
@@ -1742,7 +1797,7 @@ function holdCell(i){
 }
 
 function updateFacets(nRows){
-  let n = (F.q?1:0) + (F.dex?1:0) + F.lps.size + F.stages.size + (F.hideNoHolders?1:0);
+  let n = (F.q?1:0) + (F.dex?1:0) + F.lps.size + F.stages.size + (F.hideNoHolders?1:0) + (F.ttypes.length < 2 ? 1 : 0) + ((F.tmin ?? 0) !== 0.5 ? 1 : 0);
   for (const k in F.r) if (F.r[k][0] != null || F.r[k][1] != null) n++;
   $('#activeCount').textContent = n ? String(n) : '';
   if (CB !== fpBoard) return;   // el panel de filtros muestra la tabla que lo abrió
@@ -1781,7 +1836,7 @@ $('#ranges').innerHTML = RANGE_GROUPS.map(g => `<section class="fp-sec"><h3>${g.
     <div class="fp-in"><span class="u">${unit}</span><input type="text" id="${k}-max" data-r="${k}" data-i="1" placeholder="Max" inputmode="decimal" autocomplete="off"></div>
   </div>`).join('')}</section>`).join('');
 
-let ft; function refilter(){ const b = CB; clearTimeout(ft); ft = setTimeout(() => withBoard(b, () => { limit = 100; page = 0; requestResort(); render(); fillHolders(); saveFilters(); renderAlerts(); }), 150); }
+let ft; function refilter(){ const b = CB; clearTimeout(ft); ft = setTimeout(() => withBoard(b, () => { limit = 100; page = 0; requestResort(); render(); fillHolders(); saveFilters(); }), 150); }
 let fpBoard = BOARDS[0];
 const onFP = fn => (...a) => withBoard(fpBoard, () => fn(...a));
 $('#ranges').addEventListener('input', onFP(e => {
@@ -1793,6 +1848,7 @@ $('#ranges').addEventListener('input', onFP(e => {
 $('#q').addEventListener('input', onFP(e => { F.q = e.target.value; refilter(); }));
 $('#q').addEventListener('keydown', e => { const v = e.target.value.trim(); if (e.key === 'Enter' && MINT_RE.test(v)) addMint(v); });
 $('#dexSel').addEventListener('change', onFP(e => { F.dex = e.target.value; refilter(); }));
+$('#tmin').addEventListener('input', onFP(e => { const v = parseAmt(e.target.value); F.tmin = v; e.target.style.borderColor = e.target.value && v == null ? 'var(--down)' : ''; updateFacets(); saveFilters(); renderTradesBoard(); }));
 $('#jupKey').value = jupKey;
 $('#jupKey').addEventListener('change', e => { jupKey = e.target.value.trim(); store.set('rs-jupkey', jupKey); jupBase = null; loadJupiter().then(render); });
 document.addEventListener('click', e => {
@@ -1803,6 +1859,7 @@ document.addEventListener('click', e => {
   else if (t.dataset.copy){ const m = t.dataset.copy;
     (navigator.clipboard?.writeText(m) || Promise.reject()).then(() => toast('CA copied'), () => toast(m)); }
   else if (t.dataset.preset){ withBoard(fpBoard, () => applyPreset(t.dataset.preset)); }
+  else if (t.dataset.tt){ withBoard(fpBoard, () => { const k = t.dataset.tt; F.ttypes = F.ttypes.includes(k) ? F.ttypes.filter(x => x !== k) : [...F.ttypes, k]; syncTradeUI(); updateFacets(); saveFilters(); renderTradesBoard(); }); }
   else if (t.dataset.chart){ openChart(t.dataset.chart); }
   else if (t.id === 'chartClose'){ closeChart(); }
   else if (t.dataset.src){ source = t.dataset.src; document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b === t)); limit = 100; requestResort(); render(); fillHolders(); }
@@ -1845,7 +1902,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden){ fas
 
 function setRange(k, mn, mx){ F.r[k] = [mn, mx]; $(`#${k}-min`).value = mn ?? ''; $(`#${k}-max`).value = mx ?? ''; }
 function resetFilters(){
-  F.q=''; F.dex=''; F.lps.clear(); F.stages.clear(); F.hideNoHolders=false; F.r={};
+  F.q=''; F.dex=''; F.lps.clear(); F.stages.clear(); F.hideNoHolders=false; F.r={}; F.tmin=0.5; F.ttypes=['buy','sell']; syncTradeUI();
   $('#q').value=''; $('#dexSel').value=''; $('#hideNoHolders').setAttribute('aria-pressed', false); $('#hideNoHoldersBox').checked = false;
   document.querySelectorAll('#ranges input').forEach(i => { i.value=''; i.style.borderColor=''; });
 }
@@ -1859,13 +1916,14 @@ function applyPreset(p){
 }
 $('#resetBtn').addEventListener('click', onFP(() => { resetFilters(); refilter(); updateFacets(); }));
 
-function saveFilters(){ store.set('gt-board-' + CB.key, { q:F.q, dex:F.dex, lps:[...F.lps], stages:[...F.stages], h:F.hideNoHolders, r:F.r, sortKey, sortDir, tf }); }
+function saveFilters(){ store.set('gt-board-' + CB.key, { q:F.q, dex:F.dex, lps:[...F.lps], stages:[...F.stages], h:F.hideNoHolders, r:F.r, tmin:F.tmin, ttypes:F.ttypes, sortKey, sortDir, tf }); }
 function loadFilters(){ forBoards(loadBoardFilters); }
 function loadBoardFilters(){
   const s = store.get('gt-board-' + CB.key, CB.key === 'mid' ? store.get('rs-filters-v3', null) : null); if (!s) return;
   if (TF_LABEL[s.tf]) tf = s.tf;
   F.q = s.q||''; F.dex = s.dex||''; (s.lps||[]).forEach(x=>F.lps.add(x)); (s.stages||[]).forEach(x=>F.stages.add(x));
   F.hideNoHolders = !!s.h;
+  if ('tmin' in s) F.tmin = s.tmin; if (Array.isArray(s.ttypes)) F.ttypes = s.ttypes;
   for (const k in (s.r||{})) { const [a,b] = s.r[k] || []; if (RANGES.some(([rk]) => rk === k)) F.r[k] = [a ?? null, b ?? null]; }
   if (s.sortKey && s.sortKey !== 'fresh') { sortKey = s.sortKey; sortDir = s.sortDir || -1; }
 }
@@ -1874,7 +1932,12 @@ function syncFilterUI(){
   $('#q').value = F.q; $('#dexSel').value = F.dex;
   $('#hideNoHolders').setAttribute('aria-pressed', F.hideNoHolders); $('#hideNoHoldersBox').checked = F.hideNoHolders;
   document.querySelectorAll('#ranges input[data-r]').forEach(i => { const v = F.r[i.dataset.r]?.[+i.dataset.i]; i.value = v ?? ''; i.style.borderColor = ''; });
+  syncTradeUI();
   updateFacets();
+}
+function syncTradeUI(){
+  document.querySelectorAll('[data-tt]').forEach(b => b.setAttribute('aria-pressed', F.ttypes.includes(b.dataset.tt)));
+  $('#tmin').value = F.tmin ?? ''; $('#tmin').style.borderColor = '';
 }
 
 /* panel de filtros */
@@ -1912,6 +1975,7 @@ let wallets = store.get('gt-wallets', []);   // [{address, label, emoji, enabled
 wallets.forEach((w, i) => { if (!w.emoji) w.emoji = ['🐸','🐳','🦊','🐶','🐱','👻','🤖','🦍','🐺','🦄','🐙','🐼'][i % 12]; });
 const saveWallets = () => store.set('gt-wallets', wallets);
 let alerts = store.get('gt-alerts', []);     // más reciente primero
+alerts = alerts.filter(a => !a.src);   // los trades de las listas ya no se guardan aquí
 alerts.sort((x, y) => y.ts - x.ts);
 let saveAT = 0;
 const saveAlerts = () => { if (!saveAT) saveAT = setTimeout(() => { saveAT = 0; store.set('gt-alerts', alerts.slice(0, 200)); }, 1000); };
@@ -2103,6 +2167,7 @@ const SOL_ICON = 'https://dd.dexscreener.com/ds-data/tokens/solana/So11111111111
 const USDC_ICON = 'https://dd.dexscreener.com/ds-data/tokens/solana/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.png';
 const WALLET_EMOJIS = ['🐸','🐳','🦊','🐶','🐱','👻','🤖','🦍','🐺','🦄','🐙','🐼'];
 const walletEmoji = addr => wallets.find(w => w.address === addr)?.emoji || '👛';
+const fmtSol = n => n >= 1000 ? fmtAmt(n) : n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2);
 const fmtQty = n => n == null ? '' : n >= 1000 ? fmtAmt(n) : n >= 10 ? n.toFixed(2) : n.toFixed(4);
 function badgeFor(lp, dexId){
   const isLp = lp && lp !== 'Other / DEX';
@@ -2115,15 +2180,17 @@ function alertRow(a){
   const tone = a.kind === 'buy' || a.kind === 'pump' ? 'up' : 'down';
   const type = a.kind === 'buy' ? 'Buy' : a.kind === 'sell' ? (a.all ? 'All' : 'Sell') : a.kind === 'pump' ? 'Pump' : 'Dump';
   const typeTitle = a.kind === 'sell' && a.all ? 'Sold the whole position' : '';
+  const mine = a.src && wallets.find(w => w.address === a.trader);
   const who = a.src
-    ? `<span class="al-src">${a.src === 'mid' ? 'MID' : 'HIGH'}</span><a class="al-name mut al-trader" href="https://solscan.io/account/${esc(a.trader || '')}" target="_blank" rel="noopener" title="Trader ${esc(a.trader || '')}">${esc(shortAddr(a.trader || '????????'))}</a>`
+    ? (mine ? `<span class="al-emoji">${esc(mine.emoji || '👛')}</span><span class="al-name ${tone}" title="${esc(a.trader)}">${esc(mine.label || shortAddr(a.trader))}</span>`
+            : `<a class="al-name al-trader" href="https://solscan.io/account/${esc(a.trader || '')}" target="_blank" rel="noopener" title="Trader ${esc(a.trader || '')} · open on Solscan">${esc(shortAddr(a.trader || '????????'))}</a>`)
     : trade
     ? `<span class="al-emoji">${esc(walletEmoji(a.wallet))}</span><span class="al-name ${tone}" title="${esc(a.wallet)}">${esc(walletName(a.wallet))}</span>`
     : `<span class="al-emoji">${a.kind === 'pump' ? '🚀' : '🩸'}</span><span class="al-name mut">Price spike</span>`;
   const amount = trade
     ? (a.stable != null
         ? `<img class="al-cur" src="${USDC_ICON}" alt="" title="USDC" referrerpolicy="no-referrer"><span class="${tone}">${fmtQty(a.stable)}</span>`
-        : a.sol != null ? `<img class="al-cur" src="${SOL_ICON}" alt="" title="SOL" referrerpolicy="no-referrer"><span class="${tone}">${fmtQty(a.sol)}</span>` : '')
+        : a.sol != null ? `<img class="al-cur" src="${SOL_ICON}" alt="" title="SOL" referrerpolicy="no-referrer"><span class="${tone}">${a.src ? fmtSol(a.sol) : fmtQty(a.sol)}</span>` : '')
     : `<span class="${tone}">${a.pct > 0 ? '+' : ''}${a.pct.toFixed(0)}%</span><span class="al-in">5m</span>`;
   const when = new Date(a.ts).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
   return `<tr class="al-row" data-url="${esc(a.url || '')}">
@@ -2246,20 +2313,20 @@ function updateBar(){
 }
 setInterval(updateBar, 1000);
 
-const LAYOUTS = { side:'Side by side', stack:'Stacked', screener:'Tokens only', alerts:'Alerts only' };
-const layout = Object.assign({ mode:'side', swap:false }, store.get('gt-layout', {}));
+const layout = Object.assign({ mode:'both', wallets:true, swap:false }, store.get('gt-layout2', {}));
 function applyLayout(){
   const b = $('#boards');
-  b.dataset.layout = layout.mode; b.classList.toggle('swap', !!layout.swap);
+  b.dataset.layout = layout.mode; b.classList.toggle('swap', !!layout.swap); b.classList.toggle('nowallets', !layout.wallets);
   document.querySelectorAll('[data-layout-mode]').forEach(x => x.setAttribute('aria-checked', x.dataset.layoutMode === layout.mode));
-  $('#layoutSwap').setAttribute('aria-pressed', !!layout.swap);
-  $('#layoutSwap').disabled = layout.mode === 'alerts';
+  $('#layoutWallets').setAttribute('aria-pressed', !!layout.wallets);
+  $('#layoutSwap').setAttribute('aria-pressed', !!layout.swap); $('#layoutSwap').disabled = !layout.wallets;
+  store.set('gt-layout2', layout);
   setTimeout(setPageSize, 50);
-  store.set('gt-layout', layout);
 }
 $('#layoutBtn').addEventListener('click', e => { e.stopPropagation(); const m = $('#layoutMenu'); m.hidden = !m.hidden; $('#layoutBtn').setAttribute('aria-expanded', !m.hidden); });
 document.addEventListener('click', e => {
   const o = e.target.closest('[data-layout-mode]'); if (o){ layout.mode = o.dataset.layoutMode; applyLayout(); return; }
+  if (e.target.closest('#layoutWallets')){ layout.wallets = !layout.wallets; applyLayout(); return; }
   if (e.target.closest('#layoutSwap')){ layout.swap = !layout.swap; applyLayout(); return; }
   if (!e.target.closest('#layoutMenu') && !e.target.closest('#layoutBtn')) $('#layoutMenu').hidden = true;
 });
@@ -2293,21 +2360,15 @@ $('#emojiCustom').addEventListener('keydown', e => { if (e.key === 'Enter') setE
 
 /* ---------- filtros de las alertas ---------- */
 const AF_KEYS = ['buy','sell','all','pump','dump'];
-const AF_DEFAULT = () => ({ types: AF_KEYS.slice(), srcs: ['wallets','mid','high'], listMin: 0.5, wallets: [], q:'', minSol:null, maxSol:null, mcMin:null, mcMax:null, ageMin:null, ageMax:null });
+const AF_DEFAULT = () => ({ types: AF_KEYS.slice(), wallets: [], q:'', minSol:null, maxSol:null, mcMin:null, mcMax:null, ageMin:null, ageMax:null });
 const AF = Object.assign(AF_DEFAULT(), store.get('gt-alert-filters', {}));
 const saveAF = () => store.set('gt-alert-filters', AF);
 const alertType = a => a.kind === 'sell' && a.all ? 'all' : a.kind;
 function passAF(a){
   if (!AF.types.includes(alertType(a))) return false;
   const trade = a.kind === 'buy' || a.kind === 'sell';
-  if (a.src){   // trade de un token de Midcaps / Highcaps: tiene que seguir pasando los filtros de esa lista
-    if (!AF.srcs.includes(a.src)) return false;
-    const b = BOARDS.find(x => x.key === a.src); if (b?.pass && !b.pass.has(a.mint)) return false;
-    if (AF.listMin != null && !(a.sol >= AF.listMin)) return false;
-  } else if (a.wallet){
-    if (!AF.srcs.includes('wallets')) return false;
-    if (AF.wallets.length && !AF.wallets.includes(a.wallet)) return false;
-  }
+  if (a.src) return false;   // los trades de Midcaps / Highcaps van en su propia tabla
+  if (a.wallet && AF.wallets.length && !AF.wallets.includes(a.wallet)) return false;
   if (AF.q){ const q = AF.q.toLowerCase(); if (!((a.symbol || '').toLowerCase().includes(q) || (a.mint || '').toLowerCase().startsWith(q))) return false; }
   if (trade && (AF.minSol != null || AF.maxSol != null)){
     const s = a.sol != null ? a.sol : (a.usd != null && solUsd ? a.usd / solUsd : null);
@@ -2327,7 +2388,6 @@ function passAF(a){
 }
 function afActiveCount(){
   let n = AF.types.length < AF_KEYS.length ? 1 : 0;
-  n += AF.srcs.length < 3 ? 1 : 0;
   n += AF.wallets.length ? 1 : 0; n += AF.q ? 1 : 0;
   for (const k of ['minSol','maxSol','mcMin','mcMax','ageMin','ageMax']) if (AF[k] != null) n++;
   return n;
@@ -2340,8 +2400,6 @@ function updateAF(matching){
 }
 function renderAFPanel(){
   document.querySelectorAll('[data-aft]').forEach(b => b.setAttribute('aria-pressed', AF.types.includes(b.dataset.aft)));
-  document.querySelectorAll('[data-afs]').forEach(b => b.setAttribute('aria-pressed', AF.srcs.includes(b.dataset.afs)));
-  $('#afListMin').value = AF.listMin ?? '';
   $('#afWallets').innerHTML = wallets.length
     ? wallets.map(w => `<button class="chip" data-afw="${esc(w.address)}" aria-pressed="${AF.wallets.includes(w.address)}"><span>${esc(w.emoji || '👛')}</span>${esc(w.label || shortAddr(w.address))}</button>`).join('')
     : '<span class="fp-hint" style="margin:0">No wallets yet. Add them in Settings → Wallets.</span>';
@@ -2361,14 +2419,12 @@ $('#afReset').addEventListener('click', () => { Object.assign(AF, AF_DEFAULT());
 document.addEventListener('click', e => {
   const tb = e.target.closest('[data-aft]');
   if (tb){ const k = tb.dataset.aft; AF.types = AF.types.includes(k) ? AF.types.filter(x => x !== k) : [...AF.types, k]; saveAF(); renderAFPanel(); renderAlerts(); return; }
-  const sb = e.target.closest('[data-afs]');
-  if (sb){ const k = sb.dataset.afs; AF.srcs = AF.srcs.includes(k) ? AF.srcs.filter(x => x !== k) : [...AF.srcs, k]; saveAF(); renderAFPanel(); renderAlerts(); return; }
   const wb = e.target.closest('[data-afw]');
   if (wb){ const a = wb.dataset.afw; AF.wallets = AF.wallets.includes(a) ? AF.wallets.filter(x => x !== a) : [...AF.wallets, a]; saveAF(); renderAFPanel(); renderAlerts(); return; }
   if (!$('#afPanel').hidden && !e.target.closest('.af-wrap')) toggleAF(false);
 });
 $('#afPanel').addEventListener('input', e => {
-  const map = { afListMin:'listMin', afQ:'q', afMinSol:'minSol', afMaxSol:'maxSol', afMcMin:'mcMin', afMcMax:'mcMax', afAgeMin:'ageMin', afAgeMax:'ageMax' };
+  const map = { afQ:'q', afMinSol:'minSol', afMaxSol:'maxSol', afMcMin:'mcMin', afMcMax:'mcMax', afAgeMin:'ageMin', afAgeMax:'ageMax' };
   const k = map[e.target.id]; if (!k) return;
   if (k === 'q') AF.q = e.target.value.trim();
   else { const v = parseAmt(e.target.value); AF[k] = v; e.target.closest('.fp-in').style.borderColor = e.target.value && v == null ? 'var(--down)' : ''; }
@@ -2409,7 +2465,7 @@ document.addEventListener('click', e => {
 });
 // flechas del teclado: pasan página en la tabla que tiene el ratón encima
 let hoverBoard = BOARDS[0];
-document.addEventListener('pointerover', e => { const b = e.target.closest?.('.screener'); if (b) hoverBoard = boardOf(b); });
+document.addEventListener('pointerover', e => { const b = e.target.closest?.('.lane'); if (b) hoverBoard = boardOf(b); });
 document.addEventListener('keydown', e => {
   if (e.target.closest('input,textarea,select') || !$('#settingsPage').hidden) return;
   if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
@@ -2558,40 +2614,73 @@ applyLayout(); renderAlerts(); updateBar(); walletLoop();
    y en rotación los 60 primeros de cada lista. Solo entran tokens que pasan los filtros de su lista. */
 const tradeLast = new Map();   // mint -> último actionId visto
 const idGt = (a, b) => a.length !== b.length ? a.length > b.length : a > b;
-async function pollTrades(mint, src){
+const laneTrades = { mid: [], high: [] };   // trades en memoria de cada lista, el más reciente primero
+const TRADE_CAP = 400;
+async function pollTrades(mint, lanes){
   let j; try { const r = await fetch(`${DATAPI}/v1/txs/${mint}`); if (!r.ok) return; j = await r.json(); } catch { return; }
   const txs = Array.isArray(j?.txs) ? j.txs : []; if (!txs.length) return;
   const last = tradeLast.get(mint), now = Date.now();
   tradeLast.set(mint, txs.reduce((m, t) => (!m || idGt(String(t.actionId), m)) ? String(t.actionId) : m, last || ''));
-  const row = tokens.get(mint), out = [];
+  const row = tokens.get(mint), fresh = [];
   for (const t of txs){
     const ts = Date.parse(t.timestamp) || now;
-    if (last ? !idGt(String(t.actionId), last) : now - ts > 30000) continue;   // la primera vez, solo lo de los últimos 30 s
+    if (last ? !idGt(String(t.actionId), last) : now - ts > 60000) continue;   // la primera vez, solo lo del último minuto
     if (t.isMev || (t.type !== 'buy' && t.type !== 'sell')) continue;
-    const sol = num(t.nativeVolume); if (!(sol >= (AF.listMin ?? 0))) continue;
     const mc = row?.mcap != null && row.price > 0 && num(t.usdPrice) ? row.mcap * num(t.usdPrice) / row.price : row?.mcap ?? null;
-    out.push({ id: (t.txHash || t.actionId) + mint, kind: t.type, ts, mint, src, trader: t.traderAddress, sol, usd: num(t.usdVolume), sig: t.txHash,
+    fresh.push({ id: (t.txHash || t.actionId) + mint, kind: t.type, ts, mint, trader: t.traderAddress, sol: num(t.nativeVolume), usd: num(t.usdVolume), sig: t.txHash,
       symbol: row?.symbol, img: row?.img, mcap: mc, url: row?.url, created: row?.created, lp: row?.lp, dexId: row?.dexId });
   }
-  if (out.length) pushAlerts(out);
+  if (!fresh.length) return;
+  for (const b of lanes){
+    const min = boardVal(b, 'F').tmin || 0;
+    const add = fresh.filter(a => a.sol >= min).map(a => Object.assign({}, a, { src: b.key, _new: true }));
+    if (!add.length) continue;
+    const list = laneTrades[b.key], have = new Set(list.map(x => x.id));
+    for (const a of add) if (!have.has(a.id)) list.push(a);
+    list.sort((x, y) => y.ts - x.ts); if (list.length > TRADE_CAP) list.length = TRADE_CAP;
+    scheduleTrades(b);
+  }
 }
+const trRaf = new Set();
+function scheduleTrades(b){ if (trRaf.has(b)) return; trRaf.add(b); requestAnimationFrame(() => { trRaf.delete(b); withBoard(b, renderTradesBoard); }); }
+// tabla de trades en vivo de la lista activa: mismos tokens que la tabla (sus filtros) + tamaño mínimo y compra/venta
+function renderTradesBoard(){
+  const body = $('#trBody'); if (!body) return;
+  const pass = CB.pass, min = F.tmin || 0;
+  const list = laneTrades[CB.key].filter(a => (!pass || pass.has(a.mint)) && F.ttypes.includes(a.kind) && a.sol >= min);
+  $('#trCount').textContent = list.length ? String(list.length) : '';
+  let html;
+  if (!list.length){
+    html = `<tr><td colspan="6" class="al-empty">${pass && !pass.size ? `No ${CB.title} tokens match the filters.` : `Waiting for ${CB.title} trades…`}<span class="hint2">Trades from the tokens in the list on the left${min ? `, from ◎${min}` : ''}. Same filters as the list.</span></td></tr>`;
+  } else {
+    html = list.slice(0, 120).map(a => alertRow(a).replace('<tr class="al-row"', `<tr class="al-row${a._new ? ' al-new' : ''}"`)).join('');
+    list.forEach(a => { delete a._new; });
+  }
+  if (body._h !== html){ body.innerHTML = html; body._h = html; }
+}
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-el="trClear"]'); if (!c) return;
+  const b = boardOf(c); laneTrades[b.key] = []; withBoard(b, renderTradesBoard);
+});
 let tradeRot = 0;
 (async function tradesLoop(){
   for (;;){
-    if (document.hidden || firstLoad || !AF.srcs.some(k => k === 'mid' || k === 'high')){ await sleep(1000); continue; }
+    const shown = BOARDS.filter(b => b.root.offsetParent);
+    if (document.hidden || firstLoad || !shown.length){ await sleep(1000); continue; }
     const vis = [], top = [];
-    for (const b of BOARDS){
-      if (!AF.srcs.includes(b.key)) continue;
+    for (const b of shown){
       withBoard(b, () => { const rows = currentRows();
-        rows.slice(page * pageSize, (page + 1) * pageSize).forEach(r => vis.push([r.mint, b.key]));
-        rows.slice(0, 60).forEach(r => top.push([r.mint, b.key])); });
+        rows.slice(page * pageSize, (page + 1) * pageSize).forEach(r => vis.push([r.mint, b]));
+        rows.slice(0, 60).forEach(r => top.push([r.mint, b])); });
     }
-    const seen = new Set(), list = [];
-    const add = x => { if (!seen.has(x[0])){ seen.add(x[0]); list.push(x); } };
+    const lanesOf = new Map(), order2 = [];
+    const add = ([m, b]) => { if (!lanesOf.has(m)){ lanesOf.set(m, new Set()); order2.push(m); } lanesOf.get(m).add(b); };
     vis.forEach(add);
     for (let k = 0; k < 16 && top.length; k++) add(top[tradeRot++ % top.length]);
+    // un token que está en las dos listas se lee una vez y va a las dos
+    for (const [m, b] of [...vis, ...top]) if (lanesOf.has(m)) lanesOf.get(m).add(b);
     const t0 = Date.now();
-    await pool(list, 3, async ([m, src]) => { await pollTrades(m, src); await sleep(250); });
+    await pool(order2, 3, async m => { await pollTrades(m, [...lanesOf.get(m)]); await sleep(250); });
     await sleep(Math.max(300, 1500 - (Date.now() - t0)));
   }
 })();
