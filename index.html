@@ -308,15 +308,16 @@ body.noscroll{overflow:hidden}
 body{padding-bottom:56px}
 
 /* ---------- tableros (screener + alertas) ---------- */
-.boards{display:grid;gap:16px;align-items:start;justify-content:center;grid-template-columns:minmax(0,1162px) minmax(0,580px)}
-.boards .lanes{grid-column:1;display:flex;flex-direction:column;gap:16px;min-width:0}
+.boards{display:grid;gap:16px;align-items:start;justify-content:center;grid-template-columns:minmax(0,1176px) minmax(0,580px)}
+.boards .lanes{grid-column:1;display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:16px;min-width:0;align-items:start}
+.boards[data-layout="mid"] .lanes, .boards[data-layout="high"] .lanes{grid-template-columns:minmax(0,1fr)}
 .boards #boardAlerts{grid-column:2}
-.boards.swap{grid-template-columns:minmax(0,580px) minmax(0,1162px)}
+.boards.swap{grid-template-columns:minmax(0,580px) minmax(0,1176px)}
 .boards.swap .lanes{grid-column:2} .boards.swap #boardAlerts{grid-column:1;grid-row:1}
-.boards.nowallets{grid-template-columns:minmax(0,1162px)} .boards.nowallets #boardAlerts{display:none} .boards.nowallets .lanes{grid-column:1}
+.boards.nowallets{grid-template-columns:minmax(0,1176px)} .boards.nowallets #boardAlerts{display:none} .boards.nowallets .lanes{grid-column:1}
 .boards[data-layout="mid"] .lane[data-board="high"], .boards[data-layout="high"] .lane[data-board="mid"]{display:none}
 @media (max-width:1790px){
-  .boards, .boards.swap{grid-template-columns:minmax(0,1162px)}
+  .boards, .boards.swap{grid-template-columns:minmax(0,1176px)}
   .boards .lanes, .boards.swap .lanes, .boards #boardAlerts, .boards.swap #boardAlerts{grid-column:1;grid-row:auto}
   .boards #boardAlerts{position:static!important;max-height:560px!important}
 }
@@ -576,9 +577,11 @@ a.al-trader:hover{color:var(--fg)}
 .lane-tag.high{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 1.5px var(--fg)}
 .lane-ctl{margin-left:auto;display:flex;align-items:center;gap:8px}
 .lane-ctl .seg{display:flex}
-.lane-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.lane-body{display:grid;grid-template-columns:minmax(0,1fr)}
+.boards[data-layout="mid"] .lane-body, .boards[data-layout="high"] .lane-body{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .lane-col{min-width:0;display:flex;flex-direction:column}
-.lane-col.trades{position:relative;border-left:1px solid var(--line);min-height:360px}
+.lane-col.trades{position:relative;border-top:1px solid var(--line);height:var(--tr-h, 300px)}
+.boards[data-layout="mid"] .lane-col.trades, .boards[data-layout="high"] .lane-col.trades{border-top:0;border-left:1px solid var(--line);height:auto;min-height:360px}
 .tr-wrap{position:absolute;inset:0;display:flex;flex-direction:column;min-height:0}
 .tr-wrap .al-scroll{flex:1;min-height:0;overflow:auto;border-radius:0 0 14px 0}
 .col-head{display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-bottom:1px solid var(--line);box-sizing:border-box;flex:none}
@@ -586,16 +589,17 @@ a.al-trader:hover{color:var(--fg)}
 .col-head .icobtn{margin-left:auto}
 .icobtn.sm{width:26px;height:26px}
 .icobtn.sm svg{width:14px;height:14px}
-.screener .tablebox{border-radius:0 0 0 14px}
+.screener .tablebox{border-radius:0}
+.tr-wrap .al-scroll{border-radius:0 0 14px 14px}
 .tr-table thead th{position:sticky;top:0;z-index:1}
 .tr-table td{padding:7px 10px}
 .al-trader{font:12px var(--f-mono)}
 .al-empty .hint2{display:block;margin-top:4px;font-size:12px;opacity:.8}
 .fp-trades .fp-range{margin-top:10px}
 @media (max-width:1230px){
-  .lane-body{grid-template-columns:minmax(0,1fr)}
-  .lane-col.trades{border-left:0;border-top:1px solid var(--line);height:440px}
-  .screener .tablebox{border-radius:0}
+  .boards .lanes{grid-template-columns:minmax(0,1fr)}
+  .boards[data-layout] .lane-body{grid-template-columns:minmax(0,1fr)}
+  .boards[data-layout] .lane-col.trades{border-left:0;border-top:1px solid var(--line);height:400px}
 }
 @media (max-width:640px){ .lane-head{flex-wrap:wrap} .lane-ctl{margin-left:0;width:100%} }
 </style>
@@ -2440,7 +2444,8 @@ function computePageSize(){
   const row = vis.querySelector('tbody tr[data-mint]');
   const rowH = row ? row.getBoundingClientRect().height : 80;
   const top = box ? box.getBoundingClientRect().top + window.scrollY : 200;
-  const reserved = 32 /* cabecera tabla */ + 52 /* paginador */ + 40 /* barra inferior */ + 12;
+  const tr = vis.querySelector('.lane-col.trades'), below = tr && tr.getBoundingClientRect().top > box.getBoundingClientRect().top + 10;
+  const reserved = 32 /* cabecera tabla */ + 52 /* paginador */ + 40 /* barra inferior */ + 12 + (below ? tr.offsetHeight : 0);
   return Math.max(4, Math.min(30, Math.floor((window.innerHeight - top - reserved) / rowH)));
 }
 function setPageSize(){ const n = computePageSize(); if (n !== pageSize){ pageSize = n; render(); } }
