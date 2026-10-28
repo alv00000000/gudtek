@@ -37,11 +37,11 @@ body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--f-body);
   padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));padding-block:0 32px}
 button,input,select{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.wrap{max-width:1804px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding-top:22px}
+.wrap{max-width:1920px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding-top:22px}
 
 header.top{position:sticky;top:0;z-index:20;background:var(--bg);margin-inline:calc(-1 * max(16px, env(safe-area-inset-left,0px)));
   padding:14px max(16px, env(safe-area-inset-right,0px)) 12px max(16px, env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
-.top-inner{max-width:1772px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
+.top-inner{max-width:1888px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
 .brand{display:flex;align-items:baseline;gap:10px}
 .brand h1{font:800 22px/1 var(--f-display);letter-spacing:-.01em;margin:0}
 .brand h1{letter-spacing:.04em}
@@ -308,21 +308,13 @@ body.noscroll{overflow:hidden}
 body{padding-bottom:56px}
 
 /* ---------- tableros (screener + alertas) ---------- */
-.boards{display:grid;gap:16px;align-items:start;justify-content:center;grid-template-columns:minmax(0,1176px) minmax(0,580px)}
-.boards .lanes{grid-column:1;display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:16px;min-width:0;align-items:start}
+.boards{display:block}
+.boards #boardAlerts{display:none!important}   /* Wallet alerts quitado de la vista */
+.boards .lanes{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:16px;min-width:0;align-items:start}
 .boards[data-layout="mid"] .lanes, .boards[data-layout="high"] .lanes{grid-template-columns:minmax(0,1fr)}
-.boards #boardAlerts{grid-column:2}
-.boards.swap{grid-template-columns:minmax(0,580px) minmax(0,1176px)}
-.boards.swap .lanes{grid-column:2} .boards.swap #boardAlerts{grid-column:1;grid-row:1}
-.boards.nowallets{grid-template-columns:minmax(0,1176px)} .boards.nowallets #boardAlerts{display:none} .boards.nowallets .lanes{grid-column:1}
 .boards[data-layout="mid"] .lane[data-board="high"], .boards[data-layout="high"] .lane[data-board="mid"]{display:none}
-@media (max-width:1790px){
-  .boards, .boards.swap{grid-template-columns:minmax(0,1176px)}
-  .boards .lanes, .boards.swap .lanes, .boards #boardAlerts, .boards.swap #boardAlerts{grid-column:1;grid-row:auto}
-  .boards #boardAlerts{position:static!important;max-height:560px!important}
-}
+@media (max-width:1700px){ .boards .lanes{grid-template-columns:minmax(0,1fr)} }
 .board{min-width:0;display:flex;flex-direction:column;gap:16px}
-/* pantallas medianas: las dos tablas de tokens una encima de otra y las alertas al lado */
 
 
 /* ---------- panel de alertas ---------- */
@@ -401,7 +393,7 @@ body{padding-bottom:56px}
 /* ---------- barra inferior ---------- */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--panel);border-top:1px solid var(--line);
   padding:0 max(16px, env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px, env(safe-area-inset-left,0px))}
-.bar-inner{max-width:1772px;margin:0 auto;height:40px;display:flex;align-items:center;gap:16px;font:12px var(--f-mono);color:var(--muted)}
+.bar-inner{max-width:1888px;margin:0 auto;height:40px;display:flex;align-items:center;gap:16px;font:12px var(--f-mono);color:var(--muted)}
 .bar-conn{display:flex;align-items:center;gap:8px;color:var(--fg);font-weight:500}
 .bar-dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .bar-dot.ok{background:var(--up);box-shadow:0 0 0 3px color-mix(in srgb, var(--up) 25%, transparent)}
@@ -533,9 +525,9 @@ button.al-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* tabla de tokens compacta y paginada */
 .screener thead th{padding:8px 10px}
 .screener thead th:first-child, .screener tbody td:first-child{padding-left:14px}
-.screener thead th:not(:first-child), .screener tbody td:not(:first-child){width:84px;padding-left:6px;padding-right:6px}
-.screener thead th:last-child, .screener tbody td:last-child{width:124px;padding-right:12px}
-.screener .spk, .screener .spk svg{max-width:112px}
+.screener thead th:not(:first-child), .screener tbody td:not(:first-child){width:78px;padding-left:5px;padding-right:5px}
+.screener thead th:last-child, .screener tbody td:last-child{width:104px;padding-right:12px}
+.screener .spk, .screener .spk svg{max-width:92px}
 .screener thead th{white-space:nowrap;overflow:hidden}
 .screener .th-tf{margin-left:3px;letter-spacing:.02em}
 .screener .info{min-width:0;overflow:hidden}
@@ -577,11 +569,9 @@ a.al-trader:hover{color:var(--fg)}
 .lane-tag.high{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 1.5px var(--fg)}
 .lane-ctl{margin-left:auto;display:flex;align-items:center;gap:8px}
 .lane-ctl .seg{display:flex}
-.lane-body{display:grid;grid-template-columns:minmax(0,1fr)}
-.boards[data-layout="mid"] .lane-body, .boards[data-layout="high"] .lane-body{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.lane-body{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
 .lane-col{min-width:0;display:flex;flex-direction:column}
-.lane-col.trades{position:relative;border-top:1px solid var(--line);height:var(--tr-h, 300px)}
-.boards[data-layout="mid"] .lane-col.trades, .boards[data-layout="high"] .lane-col.trades{border-top:0;border-left:1px solid var(--line);height:auto;min-height:360px}
+.lane-col.trades{position:relative;border-left:1px solid var(--line);min-height:360px}
 .tr-wrap{position:absolute;inset:0;display:flex;flex-direction:column;min-height:0}
 .tr-wrap .al-scroll{flex:1;min-height:0;overflow:auto;border-radius:0 0 14px 0}
 .col-head{display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-bottom:1px solid var(--line);box-sizing:border-box;flex:none}
@@ -590,18 +580,26 @@ a.al-trader:hover{color:var(--fg)}
 .icobtn.sm{width:26px;height:26px}
 .icobtn.sm svg{width:14px;height:14px}
 .screener .tablebox{border-radius:0}
-.tr-wrap .al-scroll{border-radius:0 0 14px 14px}
+.tr-wrap .al-scroll{border-radius:0 0 14px 0}
 .tr-table thead th{position:sticky;top:0;z-index:1}
 .tr-table td{padding:7px 10px}
 .al-trader{font:12px var(--f-mono)}
 .al-empty .hint2{display:block;margin-top:4px;font-size:12px;opacity:.8}
 .fp-trades .fp-range{margin-top:10px}
-@media (max-width:1230px){
-  .boards .lanes{grid-template-columns:minmax(0,1fr)}
-  .boards[data-layout] .lane-body{grid-template-columns:minmax(0,1fr)}
-  .boards[data-layout] .lane-col.trades{border-left:0;border-top:1px solid var(--line);height:400px}
+@media (max-width:900px){
+  .lane-body{grid-template-columns:minmax(0,1fr)}
+  .lane-col.trades{border-left:0;border-top:1px solid var(--line);height:400px}
 }
 @media (max-width:640px){ .lane-head{flex-wrap:wrap} .lane-ctl{margin-left:0;width:100%} }
+
+/* trades a la derecha de los tokens: columnas compactas */
+.tr-table col.c-time{width:44px} .tr-table col.c-type{width:40px} .tr-table col.c-who{width:78px}
+.tr-table col.c-amt{width:62px} .tr-table col.c-mc{width:74px}
+.tr-table td.al-mc{white-space:nowrap}
+.tr-table .al-dot, .tr-table .al-age{display:none} .tr-table th{overflow:visible}
+.tr-table td{padding:7px 6px} .tr-table td:first-child, .tr-table th:first-child{padding-left:12px} .tr-table td:last-child, .tr-table th:last-child{padding-right:12px}
+.tr-table thead th{padding-left:6px;padding-right:6px}
+.tr-table .al-cur{width:12px;height:12px}
 </style>
 </head>
 <body>
@@ -849,9 +847,6 @@ a.al-trader:hover{color:var(--fg)}
         <button role="menuitemradio" data-layout-mode="both" aria-checked="true"><span class="lay-ico stack" aria-hidden="true"><i></i><i></i></span>Midcaps and Highcaps</button>
         <button role="menuitemradio" data-layout-mode="mid" aria-checked="false"><span class="lay-ico one" aria-hidden="true"><i></i></span>Midcaps only</button>
         <button role="menuitemradio" data-layout-mode="high" aria-checked="false"><span class="lay-ico one" aria-hidden="true"><i></i></span>Highcaps only</button>
-        <div class="lay-hr"></div>
-        <button id="layoutWallets" aria-pressed="true"><span aria-hidden="true">👛</span>Wallet alerts panel</button>
-        <button id="layoutSwap" aria-pressed="false"><span aria-hidden="true">⇄</span>Wallet alerts on the left</button>
       </div>
     </div>
   </div>
@@ -2111,7 +2106,7 @@ async function walletLoop(){
 (async function walletPump(){
   for (;;){
     const t0 = Date.now();
-    if (!document.hidden) await walletLoop();
+    if (!document.hidden && $('#boardAlerts').offsetParent) await walletLoop();
     await sleep(Math.max(document.hidden ? 5000 : 250, 1000 - (Date.now() - t0)));
   }
 })();
@@ -2322,16 +2317,12 @@ function applyLayout(){
   const b = $('#boards');
   b.dataset.layout = layout.mode; b.classList.toggle('swap', !!layout.swap); b.classList.toggle('nowallets', !layout.wallets);
   document.querySelectorAll('[data-layout-mode]').forEach(x => x.setAttribute('aria-checked', x.dataset.layoutMode === layout.mode));
-  $('#layoutWallets').setAttribute('aria-pressed', !!layout.wallets);
-  $('#layoutSwap').setAttribute('aria-pressed', !!layout.swap); $('#layoutSwap').disabled = !layout.wallets;
   store.set('gt-layout2', layout);
   setTimeout(setPageSize, 50);
 }
 $('#layoutBtn').addEventListener('click', e => { e.stopPropagation(); const m = $('#layoutMenu'); m.hidden = !m.hidden; $('#layoutBtn').setAttribute('aria-expanded', !m.hidden); });
 document.addEventListener('click', e => {
   const o = e.target.closest('[data-layout-mode]'); if (o){ layout.mode = o.dataset.layoutMode; applyLayout(); return; }
-  if (e.target.closest('#layoutWallets')){ layout.wallets = !layout.wallets; applyLayout(); return; }
-  if (e.target.closest('#layoutSwap')){ layout.swap = !layout.swap; applyLayout(); return; }
   if (!e.target.closest('#layoutMenu') && !e.target.closest('#layoutBtn')) $('#layoutMenu').hidden = true;
 });
 
